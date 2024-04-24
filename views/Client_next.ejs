@@ -407,12 +407,15 @@
       "input[name='Student[coursename]']"
     ).value;
 
-    // Store form input values in cookies
-    Cookies.set("name", name);
-    Cookies.set("mobile", mobile);
-    Cookies.set("email", email);
-    Cookies.set("year", year);
-    Cookies.set("coursename", coursename);
+    // Set expiry date to 15 minutes from now
+    const expiryDate = new Date(Date.now() + 15 * 60 * 1000);
+
+    // Store form input values in cookies with expiry date
+    Cookies.set("name", name, { expires: expiryDate });
+    Cookies.set("mobile", mobile, { expires: expiryDate });
+    Cookies.set("email", email, { expires: expiryDate });
+    Cookies.set("year", year, { expires: expiryDate });
+    Cookies.set("coursename", coursename, { expires: expiryDate });
   }
 
   // Function to retrieve form field values from cookies and populate the form fields

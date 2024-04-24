@@ -1,18 +1,120 @@
 <% layout('./layouts/dash_boil.ejs') %>
+
+<style>
+  /* Add your CSS styles here */
+
+  /* Main card container */
+  .dashboard-content {
+    padding: 20px;
+  }
+
+  /* Student info */
+  .dashboard-table__student-info {
+    display: flex;
+    align-items: center;
+  }
+
+  .dashboard-table__student-avatar img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+  }
+
+  .dashboard-table__title {
+    margin-left: 10px;
+  }
+
+  /* Table styles */
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .table th,
+  .table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+  }
+
+  .table th {
+    background-color: #f2f2f2;
+  }
+
+  /* Export button */
+  #export-csv {
+    background-color: #0071dc;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 15px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    width: 100%;
+  }
+
+  #export-csv:hover {
+    background-color: #0e62b1;
+  }
+
+  /* Hide details row by default */
+  .details-row {
+    display: none;
+  }
+
+  /* Style details container */
+  .details-container {
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+  }
+
+  /* Media query for mobile */
+  @media screen and (max-width: 768px) {
+    .expand-button {
+      display: none; /* Hide on mobile */
+    }
+
+    .action {
+      display: none; /* Hide on mobile */
+    }
+
+    #export-csv {
+      margin-bottom: 10px;
+    }
+
+    .details-row {
+      display: table-row; /* Show details directly */
+    }
+
+    .dashboard-table__student-avatar img {
+      width: 30px;
+      height: 30px;
+    }
+
+    .dashboard-table__title {
+      margin-left: 5px;
+    }
+  }
+</style>
+
 <!-- Dashboard Content Start -->
 <div class="dashboard-content">
   <div class="container">
     <h4 class="dashboard-title">My Students</h4>
-
-    <!-- Dashboard Students Start -->
+    <button id="export-csv">Export CSV</button>
+    <!-- Export CSV button -->
     <div class="dashboard-students">
       <div class="dashboard-table table-responsive">
-        <table class="table">
+        <table class="table" id="students-table">
           <thead>
             <tr>
               <th class="student">Student</th>
-              <th class="courses">Course</th>
-              <th class="action">Action</th>
+              <th class="name">Name</th>
+              <th class="mobile">Mobile</th>
+              <th class="year">Year</th>
+              <th class="coursename">Course Name</th>
+              <th class="email">Email</th>
             </tr>
           </thead>
           <tbody>
@@ -34,24 +136,56 @@
                   </div>
                 </div>
               </td>
-              <td>
-                <div class="dashboard-table__mobile-heading">Course</div>
-                <div class="dashboard-table__text"><%= user.coursename %></div>
+              <td class="details" data-label="Name"><%= user.name %></td>
+              <td class="details" data-label="Mobile"><%= user.mobile %></td>
+              <td class="details" data-label="Year"><%= user.year %></td>
+              <td class="details" data-label="Course Name">
+                <%= user.coursename %>
               </td>
-              <td>
-                <div class="dashboard-table__text">
-                  <a class="assignment-link" href="#"
-                    ><i class="fas fa-angle-right"></i
-                  ></a>
-                </div>
-              </td>
+              <td class="details" data-label="Email"><%= user.email %></td>
             </tr>
             <% } %>
           </tbody>
         </table>
       </div>
     </div>
-    <!-- Dashboard Students End -->
   </div>
 </div>
 <!-- Dashboard Content End -->
+
+<script>
+  // Export data to CSV
+  document.getElementById("export-csv").addEventListener("click", function () {
+    const table = document.getElementById("students-table");
+    const rows = Array.from(table.querySelectorAll("tr"));
+
+    // Extract data from table
+    const data = rows.map((row) =>
+      Array.from(row.querySelectorAll(".details")).map((td) =>
+        td.textContent.trim()
+      )
+    );
+
+    // Insert column names at the beginning
+    const columnNames = ["Name", "Mobile", "Year", "Course Name", "Email"];
+    data.unshift(columnNames);
+
+    // Remove empty rows
+    const cleanedData = data.filter((row) => row.some((cell) => cell !== ""));
+
+    // Generate CSV content
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      cleanedData.map((row) => row.join(",")).join("\n");
+
+    // Create a link element to trigger the download
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "students.csv");
+    document.body.appendChild(link);
+
+    // Trigger the download
+    link.click();
+  });
+</script>
