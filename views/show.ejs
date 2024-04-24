@@ -1,0 +1,193 @@
+<% layout('./layouts/boilerplate.ejs') %>
+
+<style>
+  .card-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    padding: 70px 0;
+  }
+
+  .course-card {
+    user-select: none;
+    background: #ffffff;
+    border-radius: 25px;
+    width: 100%;
+    height: 26rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    margin: 14px;
+    transition: 0.4s ease-in-out;
+  }
+  .course-card-img {
+    width: 100%;
+    height: 225px;
+    border-radius: 25px 25px 0px 0px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+  .course-card-img .main {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    z-index: 1;
+    transition: 0.4s ease-in-out;
+  }
+  .course-card-content {
+    padding: 16px;
+    font-family: Helvetica, sans-serif;
+  }
+  .course-card-content h4 {
+    font-family: Helvetica, sans-serif;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 16px;
+    /* identical to box height */
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: rgba(0, 0, 0, 0.74);
+  }
+  .course-card-content h6 {
+    font-family: Ubuntu;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 16px;
+    /* identical to box height */
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: #1c0fd7;
+  }
+  .course-card:hover {
+    transform: scale(1.05);
+  }
+  .course-card:hover .course-card-img .main {
+    transform: scale(1.1);
+  }
+  .course-card:hover .course-card-img .layered {
+    filter: blur(19);
+    transform: scale(1.5);
+  }
+  .card-text-price {
+    color: #888;
+    margin-bottom: 0.5rem;
+  }
+  .card-text-discount {
+    color: #444;
+    font-weight: 600;
+  }
+  #category-select {
+    border: none;
+    background: #630274;
+    color: #fff;
+    border-radius: 10px;
+    padding: 10px 15px;
+  }
+  .course-filter {
+    margin-bottom: -20px;
+  }
+  .card-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 2rem;
+  }
+  .btn {
+    background: #630274;
+    color: #fff;
+    transition: all 0.4s ease-in-out;
+    border-radius: 10px;
+  }
+  .btn:hover {
+    background: #34127c;
+    border-radius: 5px;
+    color: #fff;
+  }
+  .admin_heading_cont {
+    display: flex;
+    text-align: center;
+    flex-direction: column;
+  }
+  .admin_controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+  .Admin-heading {
+    font-weight: 600;
+    font-size: 60px;
+    background: -webkit-linear-gradient(#6d0ea8, #c60987);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 2rem;
+  }
+  .admin_control_btn {
+    padding: 8px 15px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    transition: all 0.4s ease-in-out;
+  }
+  .admin_control_btn:hover {
+    border: 1px solid #6d0ea8;
+  }
+</style>
+
+<div class="admin_heading_cont">
+  <h1 class="Admin-heading">Admin Panel</h1>
+  <div class="admin_controls">
+    <form action="/admin/adminusers" method="get">
+      <button class="admin_control_btn">Manage Admins</button>
+    </form>
+    <form action="/admin/Create" method="get">
+      <button class="admin_control_btn">Add new Course</button>
+    </form>
+    <form method="get" action="/admin/Coupons">
+      <button class="admin_control_btn">Show Coupons</button>
+    </form>
+    <form method="get" action="/admin/createCoupon">
+      <button class="admin_control_btn">Create New Coupon</button>
+    </form>
+    <form method="get" action="#">
+      <button class="admin_control_btn">People Enrolled</button>
+    </form>
+  </div>
+</div>
+
+<div class="card-container">
+  <div class="row">
+    <% for(let course of allCourses) {%>
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="course-card">
+        <div class="course-card-img">
+          <img src="<%= course.image %>" class="main" alt="" />
+        </div>
+        <div class="course-card-content">
+          <h4><%= course.title %></h4>
+          <p class="card-text-price" style="text-decoration: line-through">
+            ₹ <%= course.price %>
+          </p>
+          <p class="card-text">
+            Discounted price:<span class="card-text-discount"
+              >₹ <%= 0.7*(course.price) %></span
+            >
+          </p>
+          <div class="card-btn">
+            <a href="/admin/<%= course._id %>/Edit" class="btn">Edit</a>
+            <form
+              method="post"
+              action="/admin/<%= course._id %>?_method=DELETE"
+            >
+              <button class="btn">Delete</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <% } %>
+  </div>
+</div>

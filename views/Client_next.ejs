@@ -1,0 +1,490 @@
+<% layout('./layouts/boilerplate.ejs') %>
+
+<style>
+  /* Global styles */
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f8f8f8;
+  }
+
+  /* Main card container */
+  .main-card {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    margin: auto;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    max-width: 900px; /* Adjust max-width as needed */
+    position: relative;
+  }
+
+  /* Left side containing the course image */
+  .left-side {
+    flex: 1;
+    padding-right: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  /* Course image */
+  .course-image {
+    height: 100%;
+    width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .course-image img {
+    object-fit: cover;
+    width: 100%;
+  }
+
+  /* Right side containing the form */
+  .right-side {
+    flex: 1;
+    padding-left: 20px;
+  }
+
+  /* Form container */
+  .form-container {
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Form input fields */
+  .form-input {
+    width: 100%;
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    outline: none;
+    transition: border-color 0.3s ease;
+  }
+
+  /* Form input fields on focus */
+  .form-input:focus {
+    border-color: #c60987;
+  }
+
+  /* Submit button */
+  .submit-button {
+    background-color: #c60987;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-bottom: 20px;
+  }
+
+  /* Submit button hover effect */
+  .submit-button:hover {
+    background-color: #e20c9a;
+  }
+
+  /* Flash message */
+  .flash-message {
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px;
+    background-color: #ffe6e6;
+    border: 1px solid #ff3333;
+    border-radius: 5px;
+    display: none;
+    z-index: 999;
+  }
+
+  .flash-message.show {
+    display: block;
+  }
+
+  .applied-coupon {
+    display: inline-block;
+  }
+
+  .coupon-name {
+    background: #bbb;
+    padding: 10px 15px;
+    border-radius: 10px;
+  }
+
+  .remove-coupon {
+    border: none;
+    background: #000;
+    color: #fff;
+    border: 2px solid transparent;
+    border-radius: 20px;
+    height: 30px;
+    width: 30px;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .remove-coupon:hover {
+    background: #ddd;
+    border: 2px solid #000;
+    color: #000;
+    border-radius: 20px;
+  }
+
+  #coupon {
+    width: 100%; /* Adjust width as needed */
+    margin-bottom: 20px;
+  }
+
+  .applied-coupon {
+    margin-top: 20px;
+  }
+  /* Flash message */
+  .flash-message {
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px;
+    background-color: #ffe6e6;
+    border: 1px solid #ff3333;
+    border-radius: 5px;
+    display: none;
+    z-index: 999;
+  }
+
+  .flash-message.show {
+    display: block;
+  }
+  /* CSS Styling */
+
+  /* Description button */
+  .description-button {
+    background-color: #c60987;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-bottom: 20px;
+    margin-top: 20px;
+  }
+
+  .description-button:hover {
+    background-color: #e20c9a;
+  }
+
+  .description-popup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    overflow: auto; /* Enable scrolling if the content exceeds the viewport */
+  }
+
+  .popup-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    width: 80%; /* Adjust width as needed */
+    max-width: 600px; /* Maximum width */
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    color: #888;
+    cursor: pointer;
+  }
+
+  .close-button:hover {
+    color: #333;
+  }
+
+  .popup-content h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+
+  .popup-content p {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  /* Media queries for mobile screens */
+  @media screen and (max-width: 768px) {
+    .main-card {
+      flex-direction: column; /* Stack elements vertically */
+      align-items: center;
+      margin-top: 5rem;
+    }
+
+    .left-side,
+    .right-side {
+      flex: none; /* Reset flex properties */
+      width: 100%;
+      padding: 0;
+    }
+
+    .form-input {
+      width: calc(100% - 20px); /* Adjust input width */
+      border-radius: 10px;
+    }
+
+    .submit-button {
+      width: calc(100% - 20px); /* Adjust button width */
+    }
+  }
+</style>
+
+<div class="main-card">
+  <!-- Left side with the course image -->
+  <div class="left-side">
+    <div class="course-image">
+      <img src="<%= Course.image %>" alt="Course Image" />
+    </div>
+    <!-- Course description -->
+    <button id="descriptionButton" class="description-button">
+      Description
+    </button>
+    <div class="description-popup" id="descriptionPopup">
+      <div class="popup-content">
+        <span class="close-button" onclick="closeDescriptionPopup()"
+          >&times;</span
+        >
+        <h2>Course Description</h2>
+        <p><%= Course.description %></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right side containing the form -->
+  <div class="right-side">
+    <div class="form-container">
+      <% if(success && success.length) {%>
+      <div class="flash-message show"><%= success %></div>
+      <% } %> <% if(error && error.length){ %>
+      <div class="flash-message show"><%= error %></div>
+      <% } %>
+      <!-- Flash message for coupon -->
+      <div class="flash-message" id="couponMessage"></div>
+
+      <!-- Student Info Form -->
+      <form
+        action="/<%= Course._id %>/details/payment"
+        method="post"
+        id="studentForm"
+      >
+        <input
+          type="text"
+          name="Student[name]"
+          class="form-input"
+          placeholder="Name"
+          required
+        /><br />
+        <input
+          type="tel"
+          name="Student[mobile]"
+          class="form-input"
+          placeholder="Mobile No."
+          maxlength="10"
+          required
+        /><br />
+        <input
+          type="email"
+          name="Student[email]"
+          class="form-input"
+          placeholder="Email"
+          required
+        /><br />
+        <input
+          type="number"
+          name="Student[year]"
+          class="form-input"
+          placeholder="Year"
+          required
+        /><br />
+        <input
+          type="text"
+          name="Student[coursename]"
+          class="form-input"
+          placeholder="Course Name"
+          required
+        /><br />
+
+        <!-- Main Submit Button -->
+        <button
+          type="submit"
+          id="submitButton"
+          class="submit-button"
+          onclick="updatePayButton()"
+        >
+          Pay <% if(discountedPrice) { %> ₹ <%= discountedPrice %> <% } else {
+          %> ₹ <%= Course.discounted_price %> <% } %>
+        </button>
+      </form>
+
+      <!-- Apply Coupon Form -->
+      <form action="/<%= Course._id %>/details" method="post" id="couponForm">
+        <input
+          type="text"
+          placeholder="Coupon"
+          name="Coupon"
+          class="form-input"
+          id="coupon"
+        /><br />
+        <div class="button-container">
+          <button
+            type="submit"
+            id="applyCoupon"
+            class="submit-button"
+            onclick="storeFormValues()"
+          >
+            Apply Coupon
+          </button>
+        </div>
+      </form>
+
+      <!-- Display applied coupon -->
+      <% if(couponName) { %>
+      <div class="applied-coupon" id="appliedCoupon">
+        <span class="coupon-name"><%= couponName %></span>
+        <button class="remove-coupon" onclick="removeCoupon()">x</button>
+      </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Function to update pay button text
+  function updatePayButton() {
+    const submitButton = document.getElementById("submitButton");
+    const discountedPrice = "<%= discountedPrice %>";
+    const coursePrice = "<%= Course.discounted_price %>";
+
+    // Check if discountedPrice exists and update pay button text accordingly
+    if (discountedPrice) {
+      submitButton.textContent = `Pay ₹ ${discountedPrice}`;
+    } else {
+      submitButton.textContent = `Pay ₹ ${coursePrice}`;
+    }
+  }
+
+  // Function to store form field values in cookies and display them
+  function storeFormValues() {
+    // Get form input values
+    const name = document.querySelector("input[name='Student[name]']").value;
+    const mobile = document.querySelector(
+      "input[name='Student[mobile]']"
+    ).value;
+    const email = document.querySelector("input[name='Student[email]']").value;
+    const year = document.querySelector("input[name='Student[year]']").value;
+    const coursename = document.querySelector(
+      "input[name='Student[coursename]']"
+    ).value;
+
+    // Store form input values in cookies
+    Cookies.set("name", name);
+    Cookies.set("mobile", mobile);
+    Cookies.set("email", email);
+    Cookies.set("year", year);
+    Cookies.set("coursename", coursename);
+  }
+
+  // Function to retrieve form field values from cookies and populate the form fields
+  function populateFormFields() {
+    // Retrieve form field values from cookies
+    const name = Cookies.get("name");
+    const mobile = Cookies.get("mobile");
+    const email = Cookies.get("email");
+    const year = Cookies.get("year");
+    const coursename = Cookies.get("coursename");
+
+    // Populate form fields
+    document.querySelector("input[name='Student[name]']").value = name || "";
+    document.querySelector("input[name='Student[mobile]']").value =
+      mobile || "";
+    document.querySelector("input[name='Student[email]']").value = email || "";
+    document.querySelector("input[name='Student[year]']").value = year || "";
+    document.querySelector("input[name='Student[coursename]']").value =
+      coursename || "";
+  }
+
+  // Event listener for form submission
+  document
+    .getElementById("studentForm")
+    .addEventListener("submit", function (event) {
+      // Store form field values in cookies and display them
+      storeFormValues();
+    });
+
+  // Populate form fields with stored values when the page loads
+  window.addEventListener("load", function () {
+    populateFormFields();
+  });
+
+  function removeCoupon() {
+    const couponInput = document.getElementById("coupon");
+    const couponMessage = document.getElementById("couponMessage");
+    const appliedCoupon = document.getElementById("appliedCoupon");
+
+    // Clear coupon input field
+    couponInput.value = "";
+    // Hide applied coupon
+    appliedCoupon.style.display = "none";
+    // Clear coupon message
+    couponMessage.innerText = "";
+    couponMessage.classList.remove("show");
+
+    // Trigger form submission
+    document.getElementById("couponForm").submit();
+  }
+
+  // Auto-hide flash messages after 3 seconds
+  const flashMessages = document.querySelectorAll(".flash-message");
+  flashMessages.forEach((message) => {
+    setTimeout(() => {
+      message.classList.remove("show");
+    }, 3000);
+  });
+
+  // JavaScript for opening and closing the description pop-up
+  function openDescriptionPopup() {
+    document.getElementById("descriptionPopup").style.display = "block";
+  }
+
+  function closeDescriptionPopup() {
+    document.getElementById("descriptionPopup").style.display = "none";
+  }
+
+  // Event listener for description button
+  document
+    .getElementById("descriptionButton")
+    .addEventListener("click", function () {
+      openDescriptionPopup();
+    });
+</script>

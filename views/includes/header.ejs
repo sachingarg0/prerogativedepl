@@ -1,0 +1,481 @@
+<style>
+  body {
+    padding: 0px;
+    margin: 0px;
+  }
+
+  .navbar {
+    position: relative;
+    display: flex;
+    padding: 10px;
+    background: linear-gradient(to right, #ae1948, #753a88);
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 7px 5px 15px -4px rgba(0, 0, 0, 0.75);
+    -webkit-box-shadow: 7px 5px 15px -4px rgba(0, 0, 0, 0.75);
+    -moz-box-shadow: 7px 5px 15px -4px rgba(0, 0, 0, 0.75);
+    width: 80vw;
+    margin: 1rem auto 1rem auto;
+    border-radius: 20px;
+  }
+  .logo-header {
+    height: 55px;
+    filter: brightness(210%);
+  }
+
+  .nav-items > ul > li {
+    position: relative;
+    display: inline;
+    list-style: none;
+    margin: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+  }
+
+  .nav-items > ul > li > a {
+    color: white;
+    text-decoration: none;
+  }
+
+  .nav-items > ul > li::after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 0.17rem;
+    background: linear-gradient(to bottom right, #ff0051, #bf00ff);
+    left: 0;
+    bottom: 0;
+    transform-origin: 0% 100%;
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+  }
+
+  .nav-items > ul > li:hover::after {
+    transform: scaleX(1);
+  }
+
+  .nav-logo a,
+  .nav-button a {
+    color: white;
+    list-style: none;
+    text-decoration: none;
+    display: flex;
+  }
+
+  .nav-logo {
+    font-size: 32px;
+  }
+
+  .nav-button {
+    background-image: linear-gradient(to bottom right, #800d46, #ea2085);
+    border-radius: 50px;
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .anim-layer {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 0;
+    height: 100%;
+    background-color: black;
+    transition: width 0.3s ease, left 0.3s ease;
+  }
+
+  .nav_btns {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .nav-button:hover .anim-layer {
+    width: 100%;
+    left: 0;
+  }
+
+  .nav-button:hover a {
+    color: #fff;
+  }
+
+  .nav-button a {
+    display: block;
+    padding: 10px 20px;
+    color: white;
+    text-decoration: none;
+    position: relative;
+    z-index: 1;
+    font-weight: 500;
+  }
+  .header_admin_controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+  .header_admin_control_btn {
+    padding: 8px 15px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    transition: all 0.4s ease-in-out;
+  }
+  .header_admin_control_btn:hover {
+    border: 1px solid #6d0ea8;
+  }
+
+  /* Search Bar Styles */
+  .search-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .search-input {
+    width: 300px;
+    padding: 8px;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    font-size: 16px;
+    outline: none;
+    background: #f3f3f3;
+    transition: all 0.4s ease-in-out;
+  }
+  .search-input:focus {
+    border: 2px solid #ff03d5;
+  }
+
+  .search-button {
+    background-color: #d20b6f;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: 10px;
+    transition: background-color 0.3s ease;
+  }
+
+  .search-button:hover {
+    background-color: #2e64d1;
+  }
+
+  .search-results {
+    display: flex;
+    flex-wrap: wrap; /* Allow cards to wrap */
+    justify-content: center; /* Center cards horizontally */
+    padding: 20px;
+  }
+
+  .search-result-card {
+    /* Add styles for search result cards */
+    background: #ffffff;
+    border-radius: 25px;
+    width: calc(28% - 40px); /* Adjust based on the number of columns */
+    margin: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    overflow: hidden; /* Hide overflow content */
+    transition: 0.4s ease-in-out;
+    min-width: 15vw;
+  }
+
+  .search-result-card .course-card-img img {
+    width: 100%;
+    height: 225px;
+    border-radius: 25px 25px 0px 0px;
+    object-fit: cover;
+  }
+
+  .search-result-card .course-card-content {
+    padding: 16px;
+    font-family: Helvetica, sans-serif;
+  }
+
+  .search-result-card .course-card-content h4 {
+    font-family: Helvetica, sans-serif;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 16px;
+    /* identical to box height */
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: rgba(0, 0, 0, 0.74);
+  }
+
+  .search-result-card .card-text-price {
+    color: #888;
+    margin-bottom: 0.5rem;
+  }
+
+  .search-result-card .card-text-discount {
+    color: #444;
+    font-weight: 600;
+  }
+
+  #hamburger-menu,
+  #mobile-menu {
+    display: none;
+  }
+
+  @media only screen and (max-width: 770px) {
+    .logo-header {
+      height: 44px;
+      filter: brightness(240%);
+    }
+    .navbar {
+      display: flex;
+      margin-bottom: 3rem;
+    }
+    .search-container {
+      position: absolute;
+      top: 5rem;
+    }
+    .search-input {
+      border: 2px solid #ddd;
+    }
+    #mobile-menu {
+      background: linear-gradient(to bottom right, #cc2b5e, #753a88);
+      width: 100%;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      transition: transform 0.3s ease;
+      transform: translateX(-100%);
+      z-index: 999;
+    }
+
+    .mobile-nav-items > ul {
+      padding: 0px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .mobile-nav-items > ul > li {
+      text-align: center;
+      position: relative;
+      list-style: none;
+      margin: 10px;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    .mobile-nav-items > ul > li > a {
+      color: white;
+      text-decoration: none;
+    }
+
+    .mobile-nav-items > ul > li::after {
+      content: "";
+      position: absolute;
+      width: 100%;
+      height: 0.17rem;
+      background: linear-gradient(to bottom right, #ff0051, #bf00ff);
+      left: 0;
+      bottom: 0;
+      transform-origin: 0% 100%;
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .mobile-nav-items > ul > li:hover::after {
+      transform: scaleX(1);
+    }
+
+    .mobile-nav-button {
+      background-color: #141214;
+      border-radius: 50px;
+      position: relative;
+      display: inline-block;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .mobile-nav-button .anim-layer {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 0;
+      height: 100%;
+      background-color: white;
+      transition: width 0.3s ease, left 0.3s ease;
+    }
+
+    .mobile-nav-button:hover .anim-layer {
+      width: 100%;
+      left: 0;
+    }
+
+    .mobile-nav-button:hover a {
+      color: #141214;
+    }
+
+    .mobile-nav-button a {
+      display: block;
+      padding: 10px 20px;
+      color: white;
+      text-decoration: none;
+      position: relative;
+      z-index: 1;
+    }
+
+    .nav-items > ul,
+    .nav-button {
+      display: none;
+    }
+
+    #hamburger-cross {
+      display: block;
+      stroke: #fff;
+      fill: #fff;
+      color: white;
+      cursor: pointer;
+      font-size: 27.5px;
+      position: absolute;
+      top: 20px;
+      right: 26px;
+    }
+
+    #hamburger-menu {
+      display: block;
+      color: white;
+      cursor: pointer;
+      font-size: 24px;
+    }
+  }
+</style>
+
+<div class="navbar">
+  <div class="nav-logo">
+    <a href="/">
+      <img
+        src="../../public/images/prerogative_logo.png"
+        alt=""
+        class="logo-header"
+      />
+    </a>
+  </div>
+  <div class="nav-items">
+    <ul>
+      <% if(!currUser) { %>
+      <li><a href="/"> Home </a></li>
+      <li><a href="#"> Contact </a></li>
+      <% } %> <% if(currUser && currUser.role === 'admin') { %>
+      <li><a href="/admin"> Admin </a></li>
+      <li><a href="#"> Contact </a></li>
+      <% } %> <% if(currUser && currUser.role === 'user') { %>
+      <li><a href="/"> Home </a></li>
+      <li><a href="#"> Contact </a></li>
+      <% } %>
+      <!-- <li><a href="#"> Log In </a></li> -->
+    </ul>
+  </div>
+  <!-- Search Bar -->
+  <div class="search-container">
+    <input
+      type="text"
+      id="searchInput"
+      class="search-input"
+      placeholder="Search for courses..."
+    />
+  </div>
+  <div id="hamburger-menu">&#9776;</div>
+</div>
+
+<div id="mobile-menu">
+  <div class="mobile-nav-items">
+    <ul>
+      <% if(!currUser) { %>
+      <li><a href="/"> Home </a></li>
+      <li><a href="#"> Contact </a></li>
+      <% } %> <% if(currUser && currUser.role === 'admin') { %>
+      <li><a href="/admin"> Admin </a></li>
+      <li><a href="#"> Contact </a></li>
+      <% } %> <% if(currUser && currUser.role === 'user') { %>
+      <li><a href="/"> Home </a></li>
+      <li><a href="#"> Contact </a></li>
+      <% } %>
+    </ul>
+  </div>
+  <div id="hamburger-cross">&#10006;</div>
+</div>
+
+<script>
+  // Function to perform search
+  function searchCourses() {
+    var input = document
+      .getElementById("searchInput")
+      .value.trim()
+      .toUpperCase();
+    var cards = document.getElementsByClassName("course-card");
+    var cardContainer = document.querySelector(".card-container");
+    var searchResults = document.createElement("div");
+    searchResults.classList.add("search-results");
+
+    if (input !== "") {
+      // Filter cards based on the input
+      for (var i = 0; i < cards.length; i++) {
+        var title = cards[i].querySelector("h4").innerText.toUpperCase();
+        if (title.indexOf(input) > -1) {
+          // Clone the card and add it to search results
+          var clonedCard = cards[i].cloneNode(true);
+          clonedCard.classList.add("search-result-card");
+          searchResults.appendChild(clonedCard);
+        } else {
+          cards[i].style.display = "none"; // Hide cards that don't match the search
+        }
+      }
+    } else {
+      // If search input is empty, reload the page
+      window.location.reload();
+    }
+
+    // Clear existing cards and display search results
+    cardContainer.innerHTML = "";
+    cardContainer.appendChild(searchResults);
+  }
+
+  // Add event listener to search input field
+  document
+    .getElementById("searchInput")
+    .addEventListener("input", searchCourses);
+</script>
+
+<script>
+  var getHubergerIcon = document.getElementById("hamburger-menu");
+  var getHubergerCrossIcon = document.getElementById("hamburger-cross");
+  var getMobileMenu = document.getElementById("mobile-menu");
+
+  getHubergerIcon.addEventListener("click", function () {
+    console.log("hello");
+    getMobileMenu.style.display = "flex";
+    setTimeout(function () {
+      getMobileMenu.style.transform = "translateX(0%)"; // Slide in the menu
+    }, 50); // Add a small delay for better transition effect
+  });
+
+  getHubergerCrossIcon.addEventListener("click", function () {
+    console.log("hello");
+    getMobileMenu.style.transform = "translateX(-100%)"; // Slide out the menu
+    setTimeout(function () {
+      getMobileMenu.style.display = "none";
+    }, 300); // Wait for the transition to end before hiding
+  });
+
+  // Check if screen size changes to desktop view and hide mobile menu
+  window.addEventListener("resize", function () {
+    if (window.innerWidth > 770) {
+      getMobileMenu.style.display = "none";
+    }
+  });
+</script>

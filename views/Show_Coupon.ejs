@@ -1,0 +1,91 @@
+<% layout('./layouts/dash_boil.ejs') %>
+
+<style>
+  /* Container Styles */
+  .coupon-details-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 30px;
+    background-color: #f4f7f6;
+    border-radius: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Title Styles */
+  .coupon-details-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+    text-align: center;
+  }
+
+  /* Coupon Details Styles */
+  .coupon-details {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+
+  /* Edit and Delete Button Styles */
+  .edit-delete-buttons {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  .edit-delete-buttons button {
+    padding: 10px 20px;
+    margin: 0 10px;
+    background-color: #3f80ff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .edit-delete-buttons button:hover {
+    background-color: #2e64d1;
+  }
+</style>
+
+<div class="coupon-details-container">
+  <h1 class="coupon-details-title">Coupons Details</h1>
+  <div class="coupon-details">
+    <p><strong>Coupon Name:</strong> <%= Coupon.Name %></p>
+    <p><strong>Coupon Discount:</strong> <%= Coupon.Discount %></p>
+    <p><strong>Coupon Quantity:</strong> <%= Coupon.Coupon_qty %></p>
+    <p>
+      <strong>Coupon Created at:</strong> <%= new
+      Date(Coupon.coupon_created).toISOString().split('T')[0] %>
+    </p>
+    <p>
+      <strong>Coupon Valid Till:</strong> <%= new
+      Date(Coupon.coupon_valid).toISOString().split('T')[0] %>
+    </p>
+    <p>
+      <strong>Coupon Valid From:</strong> <%= new
+      Date(Coupon.coupon_valid_from).toISOString().split('T')[0]%>
+    </p>
+  </div>
+
+  <% if (Coupon.course.length > 0) { %>
+  <h3>Courses:</h3>
+  <ul>
+    <% for (Course of Coupon.course) { %>
+    <li><%= Course.title %></li>
+    <% } %>
+  </ul>
+  <% } %>
+
+  <div class="edit-delete-buttons">
+    <form action="/admin/Coupons/<%= Coupon._id %>/edit">
+      <button>Edit</button>
+    </form>
+    <form
+      action="/admin/Coupons/<%= Coupon._id %>?_method=DELETE"
+      method="post"
+    >
+      <button>Delete</button>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,69 @@
+<% layout('./layouts/dash_boil.ejs') %>
+<!-- Dashboard Content Start -->
+<div class="dashboard-content">
+  <div class="container">
+    <h4 class="dashboard-title">My Courses</h4>
+
+    <!-- Dashboard My Courses Start -->
+    <div class="dashboard-courses">
+      <!-- Dashboard Course Item Start -->
+      <% for(let course of allCourses) {%>
+      <div class="dashboard-courses__item">
+        <div class="dashboard-courses__thumbnail">
+          <a href="<%= course.courselink  %>"
+            ><img
+              src="<%= course.image %>"
+              alt="Courses"
+              width="260"
+              height="174"
+          /></a>
+        </div>
+        <div class="dashboard-courses__content">
+          <div class="dashboard-courses__rating">
+            <div class="rating-star">
+              <div class="rating-label" style="width: 0%"></div>
+            </div>
+            <span>(0)</span>
+          </div>
+          <h3 class="dashboard-courses__title">
+            <a href="<%= course.courselink  %>"><%= course.title %></a>
+          </h3>
+          <ul class="dashboard-courses__meta">
+            <li>
+              <span class="meta-label">Duration:</span>
+              <span class="meta-value">1h 5m </span>
+            </li>
+            <li>
+              <span class="meta-label">Students:</span>
+              <span class="meta-value">0</span>
+            </li>
+          </ul>
+          <div class="dashboard-courses__footer">
+            <div class="dashboard-courses__price">
+              <span class="sale-price"
+                >₹ <%= course.price %>.<small class="separator">00</small></span
+              >
+            </div>
+            <div class="dashboard-courses__action">
+              <a class="action" href="/admin/<%= course._id %>/Edit"
+                ><i class="fas fa-pencil-alt"></i> Edit</a
+              >
+              <form
+                method="post"
+                action="/admin/<%= course._id %>?_method=DELETE"
+              >
+                <button class="action delete">
+                  <i class="fas fa-trash-alt"></i> Delete
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <% } %>
+      <!-- Dashboard Course Item End -->
+    </div>
+    <!-- Dashboard My Courses End -->
+  </div>
+</div>
+<!-- Dashboard Content End -->

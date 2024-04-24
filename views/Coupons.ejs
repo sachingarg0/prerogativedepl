@@ -1,0 +1,50 @@
+<% layout('./layouts/dash_boil.ejs') %>
+
+<style>
+  .show-coupon-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .show-coupon-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+
+  .coupon-list {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  .coupon-list-item {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    padding: 10px;
+    transition: background-color 0.3s ease;
+  }
+
+  .coupon-list-item:hover {
+    background-color: #f0f0f0;
+  }
+
+  .coupon-list-item a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+  }
+</style>
+
+<div class="show-coupon-container">
+  <h1 class="show-coupon-title">All Coupons</h1>
+  <ul class="coupon-list">
+    <% for(let coupon of allCoupons){ %>
+    <li class="coupon-list-item">
+      <a href="/admin/Coupons/<%= coupon._id %>"><%= coupon.Name %></a>
+    </li>
+    <% } %>
+  </ul>
+</div>

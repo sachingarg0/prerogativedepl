@@ -1,0 +1,106 @@
+<% layout('./layouts/boilerplate.ejs') %>
+
+<style>
+  /* Add your custom styles here */
+  /* Example styles */
+  .payment-container {
+    max-width: 600px;
+    margin: 50px auto 50px auto;
+    padding: 30px;
+    text-align: center;
+    background-color: #f4f7f6;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .payment-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+  }
+
+  .payment-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .form-input {
+    margin-bottom: 20px;
+    width: 100%;
+  }
+
+  .form-label {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+    display: block;
+    text-align: left;
+  }
+
+  .form-input input[type="text"],
+  .form-input input[type="number"] {
+    width: calc(100% - 20px);
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+
+  .form-submit-button {
+    background-color: #6d0ea8;
+    color: white;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 16px;
+  }
+
+  .form-submit-button:hover {
+    background-color: #2e64d1;
+  }
+</style>
+
+<div class="payment-container">
+  <h1 class="payment-title">Payment Checkout</h1>
+  <form class="payment-form" action="/payment/process" method="post">
+    <div class="form-input">
+      <label class="form-label" for="cardNumber">Card Number:</label>
+      <input
+        type="text"
+        id="cardNumber"
+        name="cardNumber"
+        placeholder="Enter card number"
+        required
+      />
+    </div>
+    <div class="form-input">
+      <label class="form-label" for="expiryDate">Expiry Date:</label>
+      <input
+        type="text"
+        id="expiryDate"
+        name="expiryDate"
+        placeholder="MM/YY"
+        required
+      />
+    </div>
+    <div class="form-input">
+      <label class="form-label" for="cvv">CVV:</label>
+      <input type="number" id="cvv" name="cvv" placeholder="CVV" required />
+    </div>
+    <div class="form-input">
+      <label class="form-label" for="name">Cardholder Name:</label>
+      <input
+        type="text"
+        id="name"
+        name="name"
+        placeholder="Enter cardholder name"
+        required
+      />
+    </div>
+    <input class="form-submit-button" type="submit" value="Pay Now" />
+  </form>
+</div>

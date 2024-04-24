@@ -1,0 +1,157 @@
+<style>
+  /* Container Styles */
+  .edit-coupon-container {
+    max-width: 600px;
+    margin: 12rem auto;
+    padding: 30px;
+    text-align: center;
+    background-color: #f4f7f6;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-family: "Gilroy";
+  }
+
+  /* Title Styles */
+  .edit-coupon-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+  }
+
+  /* Form Styles */
+  .edit-coupon-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Input Styles */
+  .form-input {
+    margin-bottom: 20px;
+    width: 100%;
+  }
+
+  .form-label {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+    display: block;
+    text-align: left;
+  }
+
+  .form-input input[type="text"],
+  .form-input input[type="date"] {
+    width: calc(100% - 20px);
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+
+  /* Submit Button Styles */
+  .form-submit-button {
+    background-color: #6d0ea8;
+    color: white;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 16px;
+    margin-top: 20px;
+  }
+
+  .form-submit-button:hover {
+    background-color: #2e64d1;
+  }
+</style>
+<div class="edit-coupon-container">
+  <h1 class="edit-coupon-title">Edit Coupon</h1>
+  <form
+    class="edit-coupon-form"
+    action="/admin/Coupons/<%= Coupon._id %>/edit?_method=PUT"
+    method="post"
+  >
+    <div class="form-input">
+      <label class="form-label" for="couponName">Coupon Name:</label>
+      <input
+        type="text"
+        id="couponName"
+        placeholder="Coupon Name"
+        value="<%= Coupon.Name %>"
+        name="Coupon[Name]"
+        required
+      />
+    </div>
+    <div class="form-input">
+      <label class="form-label" for="couponDiscount"
+        >Coupon Discount Value:</label
+      >
+      <input
+        type="text"
+        id="couponDiscount"
+        placeholder="Coupon Discount"
+        value="<%= Coupon.Discount %>"
+        name="Coupon[Discount]"
+        required
+      />
+    </div>
+    <div class="form-input">
+      <label class="form-label" for="couponQuantity">Coupon Quantity:</label>
+      <input
+        type="text"
+        id="couponQuantity"
+        placeholder="Coupon Quantity"
+        value="<%= Coupon.Coupon_qty %>"
+        name="Coupon[Coupon_qty]"
+        required
+      />
+    </div>
+    <div class="form-input">
+      <label class="form-label" for="couponValidTill">Coupon Valid Till:</label>
+      <input
+        type="date"
+        id="couponValidTill"
+        name="Coupon[coupon_valid]"
+        min="<%= (new Date()).toISOString().split('T')[0] %>"
+        value="<%= new
+      Date(Coupon.coupon_valid).toISOString().split('T')[0] %>"
+        required
+      />
+    </div>
+
+    <div class="form-input">
+      <label class="form-label" for="couponValidFrom">Coupon Valid From:</label>
+      <input
+        type="date"
+        id="couponValidFrom"
+        name="Coupon[coupon_valid_from]"
+        value="<%= new Date(Coupon.coupon_valid_from).toISOString().split('T')[0] %>"
+        min="<%= (new Date()).toISOString().split('T')[0] %>"
+      />
+    </div>
+
+    <div class="form-input">
+      <label class="form-label" for="courseSelect">Select Courses:</label>
+      <select
+        id="courseSelect"
+        class="selection"
+        name="Coupon[course][]"
+        multiple
+        required
+      >
+        <% allCourses.forEach(course => { %> <% if
+        (Coupon.course.includes(course._id)) { %>
+        <option value="<%= course._id %>" selected><%= course.title %></option>
+        <% } else { %>
+        <option value="<%= course._id %>"><%= course.title %></option>
+        <% } %> <% }); %>
+      </select>
+    </div>
+    <button type="button" class="form-button" onclick="selectAllCourses()">
+      Select All Courses
+    </button>
+    <input class="form-submit-button" type="submit" value="Edit" />
+  </form>
+</div>

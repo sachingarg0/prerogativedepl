@@ -1,0 +1,143 @@
+<% layout('./layouts/dash_boil.ejs') %>
+
+<style>
+  .form-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 28px;
+    color: #333;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+
+  label {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #555;
+  }
+
+  input[type="text"],
+  input[type="number"] {
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+  }
+
+  input[type="submit"] {
+    background-color: #6d0ea8;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 12px 20px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  input[type="submit"]:hover {
+    background-color: #c60987;
+  }
+
+  .error-message {
+    color: red;
+    margin-top: 10px;
+    display: none;
+  }
+</style>
+
+<h1>Edit Course</h1>
+<div class="form-container">
+  <form
+    method="post"
+    action="/admin/<%= Course._id %>/Edit?_method=PUT"
+    onsubmit="return validatePrice()"
+  >
+    <label for="title">Course Title:</label>
+    <input
+      type="text"
+      id="title"
+      placeholder="Enter new title"
+      value="<%= Course.title %>"
+      name="Course[title]"
+    />
+    <label for="courseDisc">Course Description:</label>
+    <input
+      type="text"
+      id="courseDisc"
+      placeholder="Description"
+      value="<%= Course.description %>"
+      name="Course[description]"
+    />
+    <label for="price">Course Price:</label>
+    <input
+      type="number"
+      id="price"
+      placeholder="Enter new price"
+      value="<%= Course.price %>"
+      name="Course[price]"
+    />
+    <label for="discounted_price">Course Discount Price:</label>
+    <input
+      type="number"
+      id="courseDiscountedPrice"
+      placeholder="Price"
+      value="<%= Course.discounted_price %>"
+      name="Course[discounted_price]"
+      required
+    />
+    <label for="image">Course Image:</label>
+    <input
+      type="text"
+      id="image"
+      placeholder="Enter new image URL"
+      value="<%= Course.image %>"
+      name="Course[image]"
+    />
+    <label for="courseLink">Course Link:</label>
+    <input
+      type="text"
+      id="courseLink"
+      value="<%= Course.details %>"
+      placeholder="Enter Course Link"
+      name="Course[details]"
+    />
+
+    <!-- Error Message -->
+    <div id="errorMessage" class="error-message">
+      The discounted price must be less than the original price.
+    </div>
+
+    <input type="submit" value="Edit" />
+  </form>
+</div>
+
+<script>
+  function validatePrice() {
+    var price = parseFloat(document.getElementById("price").value);
+    var discountedPrice = parseFloat(
+      document.getElementById("courseDiscountedPrice").value
+    );
+
+    if (discountedPrice >= price) {
+      document.getElementById("errorMessage").style.display = "block";
+      return false; // Prevent form submission
+    }
+
+    return true;
+  }
+</script>

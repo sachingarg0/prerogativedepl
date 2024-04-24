@@ -1,0 +1,159 @@
+<% layout('./layouts/boilerplate.ejs') %>
+
+<style>
+  /* Main card container */
+  .card-container {
+    display: flex;
+    flex-wrap: wrap; /* Allow cards to wrap */
+    justify-content: center; /* Center cards horizontally */
+    padding: 20px;
+  }
+
+  /* Course card styles */
+  .course-card {
+    background: #ffffff;
+    border-radius: 25px;
+    width: calc(27% - 40px); /* Adjust based on the number of columns */
+    margin: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.121);
+    overflow: hidden; /* Hide overflow content */
+    transition: 0.4s ease-in-out;
+    user-select: none;
+  }
+
+  /* Course card image */
+  .course-card-img {
+    width: 100%;
+    height: 225px;
+    border-radius: 25px 25px 0px 0px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .course-card-img img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    z-index: 1;
+    transition: 0.4s ease-in-out;
+  }
+
+  /* Course card content */
+  .course-card-content {
+    padding: 16px;
+    font-family: Helvetica, sans-serif;
+  }
+
+  .course-card-content h4 {
+    font-family: Helvetica, sans-serif;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 16px;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: rgba(0, 0, 0, 0.74);
+  }
+
+  .course-card-content h6 {
+    font-family: Ubuntu;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 16px;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: #1c0fd7;
+  }
+
+  /* Hover effects */
+  .course-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.071);
+  }
+
+  .course-card-img:hover img {
+    transform: scale(1.05);
+  }
+
+  /* Price text */
+  .card-text-price {
+    color: #888;
+    margin-bottom: 0.5rem;
+    text-decoration: line-through;
+  }
+
+  .card-text-discount {
+    color: #444;
+    font-weight: 600;
+  }
+
+  /* Category select */
+  #category-select {
+    border: none;
+    background: #d20b6f;
+    color: #fff;
+    border-radius: 10px;
+    padding: 10px 15px;
+  }
+
+  .course-filter {
+    margin-bottom: -20px;
+  }
+
+  /* Button container */
+  .card-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 2rem;
+  }
+
+  /* Button styles */
+  .btn {
+    background: #cc2b5e;
+    color: #fff;
+    transition: all 0.4s ease-in-out;
+    border-radius: 10px;
+  }
+
+  .btn:hover {
+    background: #34127c;
+    border-radius: 5px;
+    color: #fff;
+  }
+
+  /* Media screen styles for mobile */
+  @media screen and (max-width: 768px) {
+    .course-card {
+      width: calc(100% - 40px);
+    }
+  }
+</style>
+
+<div class="card-container">
+  <% for(let course of allCourses) { %>
+  <div class="course-card">
+    <div class="course-card-img">
+      <img src="<%= course.image %>" alt="<%= course.title %>" />
+    </div>
+    <div class="course-card-content">
+      <h4><%= course.title %></h4>
+      <p class="card-text-price">₹ <%= course.price %></p>
+      <p class="card-text-discount">
+        Discounted price: ₹ <%= course.discounted_price %>
+      </p>
+      <div class="card-btn">
+        <% if(course.details) {%>
+        <a href="<%= course.details %>" class="btn">Details</a>
+        <% } %>
+        <a href="/<%= course._id %>/details" class="btn">Buy Now</a>
+      </div>
+    </div>
+  </div>
+  <% } %>
+</div>

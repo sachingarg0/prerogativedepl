@@ -1,0 +1,187 @@
+<% layout('./layouts/dash_boil.ejs') %>
+
+<style>
+  /* Container Styles */
+  .create_coupon_cont {
+    height: 95vh;
+    overflow-y: auto;
+  }
+  .create-coupon-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 30px;
+    text-align: center;
+    background-color: #f4f7f6;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Title Styles */
+  .create-coupon-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+  }
+
+  /* Form Styles */
+  .create-coupon-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Input Styles */
+  .form-input {
+    margin-bottom: 20px;
+    width: 100%;
+  }
+
+  .form-label {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+    display: block;
+    text-align: left;
+  }
+
+  .form-input input[type="text"],
+  .form-input input[type="date"] {
+    width: calc(100% - 20px);
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+
+  /* Button Styles */
+  .form-button {
+    background-color: #6d0ea8;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 16px;
+    margin-bottom: 20px;
+  }
+
+  .form-button:hover {
+    background-color: #8613cf;
+  }
+
+  /* Submit Button Styles */
+  .form-submit-button {
+    background-color: #6d0ea8;
+    color: white;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 16px;
+  }
+
+  .form-submit-button:hover {
+    background-color: #8010c5;
+  }
+  .selection {
+    width: 20vw;
+    border-radius: 10px;
+    border: 2px solid #330550;
+    text-align: center;
+  }
+</style>
+<div class="create_coupon_cont">
+  <div class="create-coupon-container">
+    <h1 class="create-coupon-title">Create A Coupon</h1>
+    <form class="create-coupon-form" action="/admin/createCoupon" method="post">
+      <div class="form-input">
+        <label class="form-label" for="couponName">Coupon Name:</label>
+        <input
+          type="text"
+          id="couponName"
+          placeholder="Coupon Name"
+          name="Coupon[Name]"
+          required
+        />
+      </div>
+      <div class="form-input">
+        <label class="form-label" for="couponDiscount"
+          >Coupon Discount Value:</label
+        >
+        <input
+          type="text"
+          id="couponDiscount"
+          placeholder="Coupon Discount"
+          name="Coupon[Discount]"
+          required
+        />
+      </div>
+      <div class="form-input">
+        <label class="form-label" for="couponQuantity">Coupon Quantity:</label>
+        <input
+          type="text"
+          id="couponQuantity"
+          placeholder="Coupon Quantity"
+          name="Coupon[Coupon_qty]"
+          required
+        />
+      </div>
+      <div class="form-input">
+        <label class="form-label" for="couponValidTill"
+          >Coupon Valid Till:</label
+        >
+        <input
+          type="date"
+          id="couponValidTill"
+          name="Coupon[coupon_valid]"
+          min="<%= (new Date()).toISOString().split('T')[0] %>"
+          required
+        />
+      </div>
+
+      <div class="form-input">
+        <label class="form-label" for="couponValidFrom"
+          >Coupon Valid From:</label
+        >
+        <input
+          type="date"
+          id="couponValidFrom"
+          name="Coupon[coupon_valid_from]"
+          min="<%= (new Date()).toISOString().split('T')[0] %>"
+        />
+      </div>
+
+      <div class="form-input">
+        <label class="form-label" for="courseSelect">Select Courses:</label>
+        <select
+          id="courseSelect"
+          class="selection"
+          name="Coupon[course][]"
+          multiple
+          required
+        >
+          <% allCourses.forEach(course => { %>
+          <option value="<%= course._id %>"><%= course.title %></option>
+          <% }); %>
+        </select>
+      </div>
+      <button type="button" class="form-button" onclick="selectAllCourses()">
+        Select All Courses
+      </button>
+      <input class="form-submit-button" type="submit" value="Create" />
+    </form>
+  </div>
+</div>
+
+<script>
+  function selectAllCourses() {
+    var courseSelect = document.getElementById("courseSelect");
+    var options = courseSelect.options;
+    for (var i = 0; i < options.length; i++) {
+      options[i].selected = true;
+    }
+  }
+</script>

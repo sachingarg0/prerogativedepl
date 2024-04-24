@@ -1,0 +1,57 @@
+<% layout('./layouts/dash_boil.ejs') %>
+<!-- Dashboard Content Start -->
+<div class="dashboard-content">
+  <div class="container">
+    <h4 class="dashboard-title">My Students</h4>
+
+    <!-- Dashboard Students Start -->
+    <div class="dashboard-students">
+      <div class="dashboard-table table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th class="student">Student</th>
+              <th class="courses">Course</th>
+              <th class="action">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% for(let user of allStudents) {%>
+            <tr>
+              <td>
+                <div class="dashboard-table__student-info">
+                  <div class="dashboard-table__student-avatar">
+                    <img
+                      src="https://cdn-icons-png.flaticon.com/512/2919/2919600.png"
+                      alt="Avatar"
+                    />
+                  </div>
+                  <div class="dashboard-table__title">
+                    <span class="name"><%= user.name %></span>
+                    <span class="date"
+                      ><%= user.createdAt.toLocaleDateString() %></span
+                    >
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="dashboard-table__mobile-heading">Course</div>
+                <div class="dashboard-table__text"><%= user.coursename %></div>
+              </td>
+              <td>
+                <div class="dashboard-table__text">
+                  <a class="assignment-link" href="#"
+                    ><i class="fas fa-angle-right"></i
+                  ></a>
+                </div>
+              </td>
+            </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- Dashboard Students End -->
+  </div>
+</div>
+<!-- Dashboard Content End -->

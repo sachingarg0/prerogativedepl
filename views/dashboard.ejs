@@ -1,0 +1,138 @@
+<% layout('./layouts/dash_boil.ejs') %>
+
+<style>
+  .earnings {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    gap: 10px;
+    font-size: 32px;
+  }
+</style>
+
+<!-- Dashboard Content Start -->
+<div class="dashboard-content">
+  <div class="container">
+    <h4 class="dashboard-title">Dashboard</h4>
+
+    <!-- Dashboard Info Start -->
+    <div class="dashboard-info">
+      <div class="row gy-2 gy-sm-6">
+        <div class="col-md-4 col-sm-6">
+          <!-- Dashboard Info Card Start -->
+          <div class="dashboard-info__card">
+            <a class="dashboard-info__card-box" href="#">
+              <div class="dashboard-info__card-icon icon-color-02">
+                <i class="edumi edumi-streaming"></i>
+              </div>
+              <div class="dashboard-info__card-content">
+                <div
+                  class="dashboard-info__card-value-active dashboard-info__card-value"
+                  data-target="<%= admin.courses.length%>"
+                >
+                  0
+                </div>
+                <div class="dashboard-info__card-heading">Active Courses</div>
+              </div>
+            </a>
+          </div>
+          <!-- Dashboard Info Card End -->
+        </div>
+
+        <div class="col-md-4 col-sm-6">
+          <!-- Dashboard Info Card Start -->
+          <div class="dashboard-info__card">
+            <div class="dashboard-info__card-box">
+              <div class="dashboard-info__card-icon icon-color-04">
+                <i class="edumi edumi-group"></i>
+              </div>
+              <div class="dashboard-info__card-content">
+                <div
+                  class="dashboard-info__card-value-stu dashboard-info__card-value"
+                  data-target="<%= admin.students.length%>"
+                >
+                  0
+                </div>
+                <div class="dashboard-info__card-heading">Total Students</div>
+              </div>
+            </div>
+          </div>
+          <!-- Dashboard Info Card End -->
+        </div>
+        <div class="col-md-4 col-sm-6">
+          <!-- Dashboard Info Card Start -->
+          <div class="dashboard-info__card">
+            <div class="dashboard-info__card-box">
+              <div class="dashboard-info__card-icon icon-color-05">
+                <i class="edumi edumi-user-support"></i>
+              </div>
+              <div class="dashboard-info__card-content">
+                <div
+                  class="dashboard-info__card-value-crs dashboard-info__card-value"
+                  data-target="<%= admin.coupons.length%>"
+                >
+                  0
+                </div>
+                <div class="dashboard-info__card-heading">Total Coupons</div>
+              </div>
+            </div>
+          </div>
+          <!-- Dashboard Info Card End -->
+        </div>
+        <div class="col-md-4 col-sm-6">
+          <!-- Dashboard Info Card Start -->
+          <div class="dashboard-info__card">
+            <div class="dashboard-info__card-box">
+              <div class="dashboard-info__card-icon icon-color-06">
+                <i class="edumi edumi-coin"></i>
+              </div>
+              <div class="dashboard-info__card-content">
+                <div class="earnings">
+                  <div class="earn">₹</div>
+                  <div
+                    class="dashboard-info__card-value-crs dashboard-info__card-value"
+                    data-target="<%= admin.earnings%>"
+                  >
+                    0
+                  </div>
+                </div>
+                <div class="dashboard-info__card-heading">Total Earnings</div>
+              </div>
+            </div>
+          </div>
+          <!-- Dashboard Info Card End -->
+        </div>
+      </div>
+    </div>
+    <!-- Dashboard Info End -->
+  </div>
+</div>
+<!-- Dashboard Content End -->
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const valueElements = document.querySelectorAll(
+      "[class^='dashboard-info__card-value']"
+    );
+
+    valueElements.forEach((element) => {
+      const startValue = parseInt(element.textContent.trim());
+      const targetValue = parseInt(element.dataset.target); // Read target value from data attribute
+      const duration = 2000; // duration of animation in milliseconds
+      const increment = Math.ceil((targetValue - startValue) / (duration / 16)); // 60fps
+
+      let currentValue = startValue;
+      const interval = setInterval(() => {
+        currentValue += increment;
+        if (
+          (increment > 0 && currentValue >= targetValue) ||
+          (increment < 0 && currentValue <= targetValue)
+        ) {
+          currentValue = targetValue;
+          clearInterval(interval);
+        }
+        element.textContent = currentValue;
+      }, 20); // 60fps
+    });
+  });
+</script>
