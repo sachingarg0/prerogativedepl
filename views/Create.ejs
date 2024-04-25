@@ -92,9 +92,33 @@
     border: 2px solid #330550;
     text-align: center;
   }
+  /* Flash message */
+  .flash-message {
+    position: absolute;
+    top: 10rem;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px;
+    background-color: #ffe6e6;
+    border: 1px solid #ff3333;
+    border-radius: 5px;
+    display: none;
+    z-index: 999;
+  }
+
+  .flash-message.show {
+    display: block;
+  }
 </style>
 <div class="create_coupon_cont">
   <div class="create-coupon-container">
+    <% if(success && success.length) {%>
+    <div class="flash-message show"><%= success %></div>
+    <% } %> <% if(error && error.length){ %>
+    <div class="flash-message show"><%= error %></div>
+    <% } %>
+    <!-- Flash message for coupon -->
+    <div class="flash-message" id="couponMessage"></div>
     <h1 class="create-coupon-title">Create A Coupon</h1>
     <form class="create-coupon-form" action="/admin/createCoupon" method="post">
       <div class="form-input">
@@ -184,4 +208,12 @@
       options[i].selected = true;
     }
   }
+
+  // Auto-hide flash messages after 3 seconds
+  const flashMessages = document.querySelectorAll(".flash-message");
+  flashMessages.forEach((message) => {
+    setTimeout(() => {
+      message.classList.remove("show");
+    }, 3000);
+  });
 </script>

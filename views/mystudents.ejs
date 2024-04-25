@@ -34,6 +34,8 @@
   .table td {
     border: 1px solid #ddd;
     padding: 8px;
+    position: relative;
+    cursor: pointer;
   }
 
   .table th {
@@ -96,6 +98,33 @@
       margin-left: 5px;
     }
   }
+
+  /* CSS for arrow buttons */
+  th {
+    position: relative;
+    cursor: pointer;
+  }
+
+  th .arrow {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+  }
+
+  .arrow.up {
+    border: solid black;
+    border-width: 0 3px 3px 0;
+    display: inline-block;
+    padding: 3px;
+  }
+
+  .arrow.down {
+    border: solid black;
+    border-width: 3px 3px 0 0;
+    display: inline-block;
+    padding: 3px;
+  }
 </style>
 
 <!-- Dashboard Content Start -->
@@ -109,12 +138,12 @@
         <table class="table" id="students-table">
           <thead>
             <tr>
-              <th class="student">Student</th>
-              <th class="name">Name</th>
-              <th class="mobile">Mobile</th>
-              <th class="year">Year</th>
-              <th class="coursename">Course Name</th>
-              <th class="email">Email</th>
+              <th class="student">Student<span class="arrow"></span></th>
+              <th class="name">Name<span class="arrow"></span></th>
+              <th class="mobile">Mobile<span class="arrow"></span></th>
+              <th class="year">Year<span class="arrow"></span></th>
+              <th class="coursename">Course Name<span class="arrow"></span></th>
+              <th class="email">Email<span class="arrow"></span></th>
             </tr>
           </thead>
           <tbody>
@@ -188,4 +217,66 @@
     // Trigger the download
     link.click();
   });
+
+  // Sorting functionality
+  const headers = document.querySelectorAll("th");
+  let sortColumn = null;
+  let sortAscending = true;
+
+  headers.forEach((header, index) => {
+    header.addEventListener("click", function () {
+      const columnIndex = index;
+      const isCurrentColumn = sortColumn === columnIndex;
+
+      // Toggle sorting direction if it's the same column
+      if (isCurrentColumn) {
+        sortAscending = !sortAscending;
+      } else {
+        sortColumn = columnIndex;
+        sortAscending = true;
+      }
+
+      // Remove sorting indicators from all headers
+      headers.forEach((header) => {
+        header.classList.remove("asc", "desc");
+        header.querySelector(".arrow").classList.remove("up", "down");
+      });
+
+      // Apply sorting indicator to the clicked header
+      header.classList.add(sortAscending ? "asc" : "desc");
+      header
+        .querySelector(".arrow")
+        .classList.add(sortAscending ? "up" : "down");
+
+      // Sort the table data
+      sortTable(columnIndex, sortAscending);
+    });
+  });
+
+  function sortTable(columnIndex, ascending) {
+    const table = document.getElementById("students-table");
+    const tbody = table.querySelector("tbody");
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+
+    rows.sort((a, b) => {
+      const aValue = a.querySelectorAll("td")[columnIndex].textContent.trim();
+      const bValue = b.querySelectorAll("td")[columnIndex].textContent.trim();
+
+      if (!isNaN(aValue) && !isNaN(bValue)) {
+        return ascending ? aValue - bValue : bValue - aValue;
+      } else {
+        return ascending
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+    });
+
+    while (tbody.firstChild) {
+      tbody.removeChild(tbody.firstChild);
+    }
+
+    rows.forEach((row) => {
+      tbody.appendChild(row);
+    });
+  }
 </script>

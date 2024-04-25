@@ -5,8 +5,9 @@ const Courses = require("../Models/course_listing.js");
 const Coupons = require("../Models/Coupon.js");
 const Student = require("../Models/Student.js");
 const Admin = require("../Models/admin.js");
-const dotenv=require('dotenv');
-dotenv.config({path:'./config.env'});
+const dotenv = require("dotenv");
+
+dotenv.config({ path: "../config.env" });
 
 const MONGO_URL = process.env.MONGOURL;
 async function main() {

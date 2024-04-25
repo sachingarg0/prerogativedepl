@@ -7,7 +7,7 @@ const path = require("path");
 const methodOverride = require("method-override");
 const CourseRouter = require("./Routes/Courses.js");
 const clientRouter = require("./Routes/Client.js");
-const CouponRouter=require('./Routes/Coupons.js');
+const CouponRouter = require("./Routes/Coupons.js");
 const { DateTime } = require("luxon");
 const flash = require("connect-flash");
 const Coupons = require("./Models/Coupon.js");
@@ -17,8 +17,7 @@ const User = require("./Models/User.js");
 const Student = require("./Models/Student.js");
 const Admin = require("./Models/admin.js");
 const passport = require("passport");
-const dotenv=require('dotenv');
-
+const dotenv = require("dotenv");
 
 const {
   initializingPassport,
@@ -35,7 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/public", express.static(path.join(__dirname, "public")));
 app.use(methodOverride("_method"));
 app.use(cookieParser());
-dotenv.config({path:'./config.env'});
+dotenv.config({ path: "./config.env" });
 const MONGO_URL = process.env.MONGOURL;
 
 main()
@@ -47,7 +46,7 @@ main()
   });
 
 async function main() {
-  await mongoose.connect(MONGO_URL)
+  await mongoose.connect(MONGO_URL);
 }
 
 //! Passport
@@ -68,7 +67,7 @@ app.use((req, res, next) => {
 
 app.use("/admin", isAuthenticated, CourseRouter);
 app.use("/", clientRouter);
-app.use("/admin",CouponRouter);
+app.use("/admin", CouponRouter);
 
 // app.get("/register", async (req, res) => {
 //   res.render("register");
@@ -81,7 +80,6 @@ app.get("/login", async (req, res) => {
 // Set up middleware to make req.user available across routes
 
 //! For User SignUp
-
 
 app.post(
   "/login",
@@ -100,7 +98,6 @@ app.get("/logout", (req, res) => {
     }
   });
 });
-
 
 app.get("/admin/dash", async (req, res) => {
   const admin = await Admin.findOne();
@@ -258,7 +255,10 @@ app.post("/:id/details/payment", async (req, res) => {
     // Update admin earnings
     const updatedAdmin = await Admin.findOneAndUpdate(
       {},
-      { $inc: { earnings: discountedPrice }, $push: { students: savedStudent._id } }, // Push the student's ID to the students array
+      {
+        $inc: { earnings: discountedPrice },
+        $push: { students: savedStudent._id },
+      }, // Push the student's ID to the students array
       { new: true }
     );
 
@@ -271,7 +271,7 @@ app.post("/:id/details/payment", async (req, res) => {
   }
 });
 
-
-app.listen(3000, () => {
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
   console.log("App is listening to port");
 });
