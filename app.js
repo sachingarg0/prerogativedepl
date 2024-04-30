@@ -396,7 +396,7 @@ app.post("/pay", async (req, res) => {
       .then(function (response) {
         console.log(response.data);
         const url = response.data.data.instrumentResponse.redirectInfo.url;
-        res.redirect(url);
+        return res.redirect(url);
       })
       .catch(function (error) {
         res.send("false");
