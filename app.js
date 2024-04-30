@@ -18,11 +18,15 @@ const Student = require("./Models/Student.js");
 const Admin = require("./Models/admin.js");
 const passport = require("passport");
 const dotenv = require("dotenv");
+const axios = require("axios");
+const uniqid = require("uniqid");
+const sha256 = require("sha256");
 
 const {
   initializingPassport,
   isAuthenticated,
 } = require("./passportConfig.js");
+
 const expressSession = require("express-session");
 
 //Middlewares
@@ -36,6 +40,12 @@ app.use(methodOverride("_method"));
 app.use(cookieParser());
 dotenv.config({ path: "./config.env" });
 const MONGO_URL = process.env.MONGOURL;
+
+// ****** Testing Gateway **********
+const PHONE_PE_HOST_URL = "https://api.phonepe.com/apis/hermes";
+const MERCHANT_ID = "PREROGATIVEONLINE";
+const SALT_INDEX = 1;
+const SALT_KEY = "20ee4b79-c225-459f-afba-bdf797f45cda";
 
 main()
   .then(() => {
@@ -79,6 +89,67 @@ app.get("/login", async (req, res) => {
 
 // Set up middleware to make req.user available across routes
 
+//! ----------- Email Sending ----------
+// const html = `
+// <h1>Hello Client</h1>
+// <p>Check your bill</p>
+// `;
+
+//! app.get("/mail", async (req, res) => {
+//   try {
+//     const transporter = nodemailer.createTransport({
+//       service: "gmail",
+//       host: "smtp.gmail.com",
+//       port: 587,
+//       secure: false, // Use `true` for port 465, `false` for all other ports
+//       auth: {
+//         user: "manan27bhasin@gmail.com",
+//         pass: "nzsg lien pykp bywr ",
+//       },
+//     });
+
+//     const mailOptions = {
+//       from: {
+//         name: "Prerogative",
+//         address: "manan27bhasin@gmail.com",
+//       }, // sender address
+//       to: "malujalove9@gmail.com, kashishmukheja7@gmail.com, manan1869.be22@chitkara.edu.in", // list of receivers
+//       subject: "Check your generated invoice", // Subject line
+//       text: "Hello world?", // plain text body
+//       html: "<b>Hello world?</b>", // html body
+//       attachments: [
+//         {
+//           filename: "test.pdf",
+//           path: path.join(__dirname, "test.pdf"),
+//           contentType: "application/pdf",
+//         },
+//         {
+//           filename: "check_image.jpg",
+//           path: path.join(__dirname, "check_image.jpg"),
+//           contentType: "application/jpg",
+//         },
+//       ],
+//     };
+
+//     const sendMail = async (transporter, mailOptions) => {
+//       try {
+//         await transporter.sendMail(mailOptions);
+//         console.log("Email has been sent!");
+//         res.send("Email has been sent!");
+//       } catch (err) {
+//         console.error(err);
+//         res.status(500).send("An error occurred while sending the email");
+//       }
+//     };
+
+//     sendMail(transporter, mailOptions);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send("An error occurred");
+//   }
+// });
+
+//! ------------ Email End ------------
 //! For User SignUp
 
 app.post(
@@ -154,6 +225,9 @@ app.get("/:id/details", async (req, res) => {
   let { id } = req.params;
   const Course = await Courses.findById(id);
   const discountedPrice = Course.discounted_price;
+  res.cookie("discountedPrice", discountedPrice, {
+    maxAge: 24 * 60 * 60 * 1000,
+  });
   let couponName = NaN;
   res.render("Client_next.ejs", { Course, discountedPrice, couponName });
 });
@@ -271,6 +345,110 @@ app.post("/:id/details/payment", async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
+app.get("/test", (req, res) => {
+  res.render("test.ejs");
+});
+
+//*********************** PAYMENT ***************** */
+app.post("/pay", async (req, res) => {
+  try {
+    const payEndpoint = "/pg/v1/pay";
+    const merchantTransactionId = uniqid();
+    const userId = 123;
+    const payload = {
+      merchantId: MERCHANT_ID,
+      merchantTransactionId: merchantTransactionId,
+      merchantUserId: userId,
+      amount: 100, // In paise
+      name: "manan",
+      redirectUrl: `http://localhost:3000/redirect-url/${merchantTransactionId}`,
+      redirectMode: "POST",
+      mobileNumber: "9999999999",
+      paymentInstrument: {
+        type: "PAY_PAGE",
+      },
+    };
+
+    // SHA256(base64 encoded payload + “/pg/v1/pay” + salt key) + ### + salt index
+
+    const bufferObj = Buffer.from(JSON.stringify(payload), "utf-8");
+    const base64EncodedPayload = bufferObj.toString("base64");
+
+    const xVerify =
+      sha256(base64EncodedPayload + payEndpoint + SALT_KEY) +
+      "###" +
+      SALT_INDEX;
+
+    const options = {
+      method: "POST",
+      url: `${PHONE_PE_HOST_URL}${payEndpoint}`,
+      headers: {
+        accept: "application/json",
+        "Content-Type": "application/json",
+        "X-VERIFY": xVerify,
+      },
+      data: {
+        request: base64EncodedPayload,
+      },
+    };
+    axios
+      .request(options)
+      .then(function (response) {
+        console.log(response.data);
+        const url = response.data.data.instrumentResponse.redirectInfo.url;
+        res.redirect(url);
+      })
+      .catch(function (error) {
+        res.send("false");
+
+        console.error(error);
+      });
+  } catch (error) {
+    res.status(500).send({
+      message: error.message,
+      success: false,
+    });
+  }
+});
+
+app.get("/redirect-url/:merchantTransactionId", async (req, res) => {
+  const { merchantTransactionId } = req.params;
+  if (merchantTransactionId) {
+    const xVerify =
+      sha256(
+        `/pg/v1/status/${MERCHANT_ID}/${merchantTransactionId}` + SALT_KEY
+      ) +
+      "###" +
+      SALT_INDEX;
+    const options = {
+      method: "GET",
+      url: `${PHONE_PE_HOST_URL}/pg/v1/status/${MERCHANT_ID}/${merchantTransactionId}`,
+      headers: {
+        accept: "application/json",
+        "Content-Type": "application/json",
+        "X-MERCHANT-ID": merchantTransactionId,
+        "X-VERIFY": xVerify,
+      },
+    };
+    axios
+      .request(options)
+      .then(async (response) => {
+        console.log(response.data);
+        if (response.data.success === true) {
+          return res.send("SUCCESS");
+        } else {
+          console.log("   ********************** ===>   ", response.data);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  } else {
+    res.send({ error: "Error" });
+  }
+});
+
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
   console.log("App is listening to port");
 });
