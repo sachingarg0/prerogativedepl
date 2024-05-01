@@ -1,0 +1,36 @@
+<button id="payButton">Pay Now</button>
+<h5></h5>
+
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.8/axios.min.js"
+  integrity="sha512-PJa3oQSLWRB7wHZ7GQ/g+qyv6r4mbuhmiDb8BjSFZ8NZ2a42oTtAq5n0ucWAwcQDlikAtkub+tPVCw4np27WCg=="
+  crossorigin="anonymous"
+  referrerpolicy="no-referrer"
+></script>
+
+<script>
+  const h = document.querySelector("h5");
+  document.getElementById("payButton").addEventListener("click", function () {
+
+    // Make POST request to /pay endpoint with the generated URL
+    axios
+      .post("/pay")
+      .then((postResponse) => {
+        console.log("POST Response:", postResponse.data);
+        // Perform a GET request after successful POST request
+          .get(postres)
+          .then((getResponse) => {
+            window.location.href = postres;
+            // Handle GET response as needed
+          })
+          .catch((getError) => {
+            console.error("GET Error:", getError);
+            // Handle GET error
+          });
+      })
+      .catch((postError) => {
+        console.error("POST Error:", postError);
+        // Handle POST error
+      });
+  });
+</script>
