@@ -504,8 +504,8 @@ app.post("/pay", async (req, res) => {
         console.log(response.data);
         const url = response.data.data.instrumentResponse.redirectInfo.url;
         // res.json({ url: url });
-        // res.send(url);
-        return res.redirect(url);
+        res.send(url);
+        // return res.redirect(url);
         // res.redirect(url);
       })
       .catch(function (error) {
