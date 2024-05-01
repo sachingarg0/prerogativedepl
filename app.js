@@ -21,6 +21,9 @@ const dotenv = require("dotenv");
 const axios = require("axios");
 const uniqid = require("uniqid");
 const sha256 = require("sha256");
+const cors = require("cors");
+const nodemailer = require("nodemailer");
+const bodyParser = require("body-parser");
 
 const {
   initializingPassport,
@@ -35,8 +38,15 @@ app.set("views", path.join(__dirname, "views"));
 app.engine("ejs", ejsmate);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 app.use("/public", express.static(path.join(__dirname, "public")));
 app.use(methodOverride("_method"));
+app.use(bodyParser.json());
+app.use(
+  bodyParser.urlencoded({
+    extended: true,
+  })
+);
 app.use(cookieParser());
 dotenv.config({ path: "./config.env" });
 const MONGO_URL = process.env.MONGOURL;
@@ -345,6 +355,103 @@ app.post("/:id/details/payment", async (req, res) => {
   }
 });
 
+// Define function to create HTML email content with dynamic values
+function generateEmailContent(amount, name, mobileNumber, coupon) {
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Invoice</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          line-height: 1.6;
+        }
+        .container {
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+          border: 1px solid #ccc;
+          border-radius: 8px;
+          background-color: #f9f9f9;
+        }
+        h2 {
+          color: #333;
+        }
+        p {
+          margin: 10px 0;
+        }
+        .invoice-info {
+          margin-top: 20px;
+          background-color: #fff;
+          padding: 15px;
+          border-radius: 8px;
+        }
+        .invoice-info p {
+          margin: 5px 0;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h2>Invoice</h2>
+        <p>Dear ${name},</p>
+        <p>We're pleased to inform you that your invoice has been generated successfully:</p>
+        <div class="invoice-info">
+          <p>Amount: ${amount}</p>
+          <p>Name: ${name}</p>
+          <p>Mobile Number: ${mobileNumber}</p>
+          <p>Coupon: ${coupon}</p>
+          <!-- Add more invoice details as needed -->
+        </div>
+        <p>Thank you for your business!</p>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+// // Example route to send email
+// app.get("/test", (req, res) => {
+//   // Retrieve user's details from cookies
+//   const amount = req.cookies.discountedPrice || "N/A";
+//   const name = "Love" || "N/A";
+//   const mobileNumber = req.cookies.mobile || "N/A";
+//   const coupon = req.cookies.coupon || "N/A";
+
+//   // Create a transporter object using the default SMTP transport
+//   let transporter = nodemailer.createTransport({
+//     host: "smtp.gmail.com",
+//     port: 587,
+//     secure: false, // true for 465, false for other ports
+//     auth: {
+//       user: "manan27bhasin@gmail.com", // your email address
+//       pass: "nzsg lien pykp bywr", // your email password
+//     },
+//   });
+
+//   // Setup email data
+//   let mailOptions = {
+//     from: '"Your Company" <sender@example.com>', // sender address
+//     to: "mananbhasin5657@gmail.com,malujalove9@gmail.com", // recipient address
+//     subject: "Invoice Notification", // Subject line
+//     html: generateEmailContent(amount, name, mobileNumber, coupon), // HTML email content with dynamic values
+//   };
+
+//   // Send email
+//   transporter.sendMail(mailOptions, (error, info) => {
+//     if (error) {
+//       console.log("Error sending email:", error);
+//       res.status(500).send("Failed to send email");
+//     } else {
+//       console.log("Email sent:", info.response);
+//       res.status(200).send("Email sent successfully");
+//     }
+//   });
+// });
+
 app.get("/test", (req, res) => {
   res.render("test.ejs");
 });
@@ -359,11 +466,11 @@ app.post("/pay", async (req, res) => {
       merchantId: MERCHANT_ID,
       merchantTransactionId: merchantTransactionId,
       merchantUserId: userId,
-      amount: 100, // In paise
-      name: "manan",
+      amount: req.cookies.discountedPrice * 100, // In paise
+      name: req.cookies.name,
       redirectUrl: `http://localhost:3000/redirect-url/${merchantTransactionId}`,
       redirectMode: "POST",
-      mobileNumber: "9999999999",
+      mobileNumber: req.cookies.mobile,
       paymentInstrument: {
         type: "PAY_PAGE",
       },
@@ -396,7 +503,10 @@ app.post("/pay", async (req, res) => {
       .then(function (response) {
         console.log(response.data);
         const url = response.data.data.instrumentResponse.redirectInfo.url;
+        // res.json({ url: url });
+        // res.send(url);
         return res.redirect(url);
+        // res.redirect(url);
       })
       .catch(function (error) {
         res.send("false");
@@ -411,8 +521,9 @@ app.post("/pay", async (req, res) => {
   }
 });
 
-app.get("/redirect-url/:merchantTransactionId", async (req, res) => {
+app.post("/redirect-url/:merchantTransactionId", async (req, res) => {
   const { merchantTransactionId } = req.params;
+  console.log(merchantTransactionId);
   if (merchantTransactionId) {
     const xVerify =
       sha256(
@@ -426,22 +537,56 @@ app.get("/redirect-url/:merchantTransactionId", async (req, res) => {
       headers: {
         accept: "application/json",
         "Content-Type": "application/json",
-        "X-MERCHANT-ID": merchantTransactionId,
+        "X-MERCHANT-ID": MERCHANT_ID,
         "X-VERIFY": xVerify,
       },
     };
     axios
       .request(options)
-      .then(async (response) => {
+      .then((response) => {
         console.log(response.data);
         if (response.data.success === true) {
-          return res.send("SUCCESS");
+          // Retrieve user's details from cookies
+          const amount = req.cookies.discountedPrice || "N/A";
+          const name = req.cookies.name || "N/A";
+          const mobileNumber = req.cookies.mobile || "N/A";
+          const coupon = req.cookies.coupon || "N/A";
+
+          // Create a transporter object using the default SMTP transport
+          let transporter = nodemailer.createTransport({
+            host: "smtp.gmail.com",
+            port: 587,
+            secure: false, // true for 465, false for other ports
+            auth: {
+              user: "manan27bhasin@gmail.com", // your email address
+              pass: "nzsg lien pykp bywr", // your email password
+            },
+          });
+
+          // Setup email data
+          let mailOptions = {
+            from: '"Your Company" <sender@example.com>', // sender address
+            to: `${req.cookies.email}`, // recipient address
+            subject: "Invoice Notification", // Subject line
+            html: generateEmailContent(amount, name, mobileNumber, coupon), // HTML email content with dynamic values
+          };
+
+          // Send email
+          transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+              console.log("Error sending email:", error);
+              res.status(500).send("Failed to send email");
+            } else {
+              console.log("Email sent:", info.response);
+              res.status(200).send("Email sent successfully");
+            }
+          });
         } else {
           console.log("   ********************** ===>   ", response.data);
         }
       })
       .catch((error) => {
-        console.error(error);
+        res.json(error);
       });
   } else {
     res.send({ error: "Error" });
