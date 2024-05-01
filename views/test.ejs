@@ -20,7 +20,7 @@
         // Perform a GET request after successful POST request
           .get(postResponse.data)
           .then((getResponse) => {
-            window.location.href = postres;
+            window.location.href = postResponse.data;
             // Handle GET response as needed
           })
           .catch((getError) => {
