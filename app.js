@@ -504,9 +504,76 @@ app.post("/pay", async (req, res) => {
         console.log(response.data);
         const url = response.data.data.instrumentResponse.redirectInfo.url;
         // res.json({ url: url });
-        res.send(url);
+        // res.send(url);
         // return res.redirect(url);
         // res.redirect(url);
+        // Send HTML response with styled JSON data and copy button
+        res.send(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Payment URL</title>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 20px;
+                background-color: #f7f7f7;
+              }
+              .container {
+                max-width: 600px;
+                margin: 0 auto;
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+              }
+              h1 {
+                font-size: 24px;
+                margin-bottom: 20px;
+              }
+              pre {
+                background-color: #f3f3f3;
+                padding: 10px;
+                border-radius: 4px;
+                overflow-x: auto;
+              }
+              .copy-button {
+                margin-top: 10px;
+                padding: 8px 16px;
+                background-color: #4caf50;
+                color: #fff;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+              }
+              .copy-button:hover {
+                background-color: #45a049;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>Payment URL</h1>
+              <p>Copy the following URL to proceed with the payment:</p>
+              <pre id="url">${url}</pre>
+              <button class="copy-button" onclick="copyUrl()">Copy URL</button>
+            </div>
+            <script>
+              function copyUrl() {
+                var urlElement = document.getElementById('url');
+                var range = document.createRange();
+                range.selectNode(urlElement);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+                document.execCommand('copy');
+                window.getSelection().removeAllRanges();
+                alert('URL copied to clipboard!');
+              }
+            </script>
+          </body>
+          </html>
+        `);
       })
       .catch(function (error) {
         res.send("false");
