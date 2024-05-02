@@ -732,7 +732,7 @@ app.post("/pay", [parseUrl, parseJson], (req, res) => {
   params["ORDER_ID"] = "TEST_" + new Date().getTime();
   params["CUST_ID"] = paymentDetails.customerId;
   params["TXN_AMOUNT"] = paymentDetails.amount;
-  params["CALLBACK_URL"] = "http://localhost:3000/callback";
+  params["CALLBACK_URL"] = "https://pg-internship.onrender.com/callback";
   params["EMAIL"] = paymentDetails.customerEmail;
   params["MOBILE_NO"] = paymentDetails.customerPhone;
 
