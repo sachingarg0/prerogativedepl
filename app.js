@@ -37,13 +37,7 @@ const {
 const expressSession = require("express-session");
 
 // Set Content Security Policy headers
-app.use((req, res, next) => {
-  res.setHeader(
-    "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self'"
-  );
-  next();
-});
+
 // const whitelist = ["http://localhost:3000"];
 
 // const corsOptions = {
