@@ -24,6 +24,10 @@ const sha256 = require("sha256");
 const cors = require("cors");
 const nodemailer = require("nodemailer");
 const bodyParser = require("body-parser");
+const https = require("https");
+const qs = require("querystring");
+const checksum_lib = require("./Routes/Paytm/checksum.js");
+const config = require("./Routes/Paytm/config.js");
 
 const {
   initializingPassport,
@@ -47,6 +51,10 @@ app.use(
     extended: true,
   })
 );
+const parseUrl = express.urlencoded({ extended: false });
+const parseJson = express.json({ extended: false });
+app.use("/callback", cors());
+
 app.use(cookieParser());
 dotenv.config({ path: "./config.env" });
 const MONGO_URL = process.env.MONGOURL;
@@ -456,208 +464,360 @@ app.get("/test", (req, res) => {
   res.render("test.ejs");
 });
 
-//*********************** PAYMENT ***************** */
-app.post("/pay", async (req, res) => {
-  try {
-    const payEndpoint = "/pg/v1/pay";
-    const merchantTransactionId = uniqid();
-    const userId = 123;
-    const payload = {
-      merchantId: MERCHANT_ID,
-      merchantTransactionId: merchantTransactionId,
-      merchantUserId: userId,
-      amount: req.cookies.discountedPrice * 100, // In paise
-      name: req.cookies.name,
-      redirectUrl: `http://localhost:3000/redirect-url/${merchantTransactionId}`,
-      redirectMode: "POST",
-      mobileNumber: req.cookies.mobile,
-      paymentInstrument: {
-        type: "PAY_PAGE",
-      },
-    };
+//*********************** PHONEPE PAYMENT ***************** */
+// app.post("/pay", async (req, res) => {
+//   try {
+//     const payEndpoint = "/pg/v1/pay";
+//     const merchantTransactionId = uniqid();
+//     const userId = 123;
+//     const payload = {
+//       merchantId: MERCHANT_ID,
+//       merchantTransactionId: merchantTransactionId,
+//       merchantUserId: userId,
+//       amount: req.cookies.discountedPrice * 100, // In paise
+//       name: req.cookies.name,
+//       redirectUrl: `http://localhost:3000/redirect-url/${merchantTransactionId}`,
+//       redirectMode: "POST",
+//       mobileNumber: req.cookies.mobile,
+//       paymentInstrument: {
+//         type: "PAY_PAGE",
+//       },
+//     };
 
-    // SHA256(base64 encoded payload + “/pg/v1/pay” + salt key) + ### + salt index
+//     // SHA256(base64 encoded payload + “/pg/v1/pay” + salt key) + ### + salt index
 
-    const bufferObj = Buffer.from(JSON.stringify(payload), "utf-8");
-    const base64EncodedPayload = bufferObj.toString("base64");
+//     const bufferObj = Buffer.from(JSON.stringify(payload), "utf-8");
+//     const base64EncodedPayload = bufferObj.toString("base64");
 
-    const xVerify =
-      sha256(base64EncodedPayload + payEndpoint + SALT_KEY) +
-      "###" +
-      SALT_INDEX;
+//     const xVerify =
+//       sha256(base64EncodedPayload + payEndpoint + SALT_KEY) +
+//       "###" +
+//       SALT_INDEX;
 
-    const options = {
-      method: "POST",
-      url: `${PHONE_PE_HOST_URL}${payEndpoint}`,
-      headers: {
-        accept: "application/json",
-        "Content-Type": "application/json",
-        "X-VERIFY": xVerify,
-      },
-      data: {
-        request: base64EncodedPayload,
-      },
-    };
-    axios
-      .request(options)
-      .then(function (response) {
-        console.log(response.data);
-        const url = response.data.data.instrumentResponse.redirectInfo.url;
-        // res.json({ url: url });
-        // res.send(url);
-        // return res.redirect(url);
-        // res.redirect(url);
-        // Send HTML response with styled JSON data and copy button
-        res.send(`
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <title>Payment URL</title>
-            <style>
-              body {
-                font-family: Arial, sans-serif;
-                margin: 0;
-                padding: 20px;
-                background-color: #f7f7f7;
-              }
-              .container {
-                max-width: 600px;
-                margin: 0 auto;
-                background-color: #fff;
-                padding: 20px;
-                border-radius: 8px;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-              }
-              h1 {
-                font-size: 24px;
-                margin-bottom: 20px;
-              }
-              pre {
-                background-color: #f3f3f3;
-                padding: 10px;
-                border-radius: 4px;
-                overflow-x: auto;
-              }
-              .copy-button {
-                margin-top: 10px;
-                padding: 8px 16px;
-                background-color: #4caf50;
-                color: #fff;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-              }
-              .copy-button:hover {
-                background-color: #45a049;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <h1>Payment URL</h1>
-              <p>Copy the following URL to proceed with the payment:</p>
-              <pre id="url">${url}</pre>
-              <button class="copy-button" onclick="copyUrl()">Copy URL</button>
-            </div>
-            <script>
-              function copyUrl() {
-                var urlElement = document.getElementById('url');
-                var range = document.createRange();
-                range.selectNode(urlElement);
-                window.getSelection().removeAllRanges();
-                window.getSelection().addRange(range);
-                document.execCommand('copy');
-                window.getSelection().removeAllRanges();
-                alert('URL copied to clipboard!');
-              }
-            </script>
-          </body>
-          </html>
-        `);
-      })
-      .catch(function (error) {
-        res.send("false");
+//     const options = {
+//       method: "POST",
+//       url: `${PHONE_PE_HOST_URL}${payEndpoint}`,
+//       headers: {
+//         accept: "application/json",
+//         "Content-Type": "application/json",
+//         "X-VERIFY": xVerify,
+//       },
+//       data: {
+//         request: base64EncodedPayload,
+//       },
+//     };
+//     axios
+//       .request(options)
+//       .then(function (response) {
+//         console.log(response.data);
+//         const url = response.data.data.instrumentResponse.redirectInfo.url;
+//         // res.json({ url: url });
+//         // res.send(url);
+//         // return res.redirect(url);
+//         // res.redirect(url);
+//         // Send HTML response with styled JSON data and copy button
+//         res.send(`
+//           <!DOCTYPE html>
+//           <html>
+//           <head>
+//             <title>Payment URL</title>
+//             <style>
+//               body {
+//                 font-family: Arial, sans-serif;
+//                 margin: 0;
+//                 padding: 20px;
+//                 background-color: #f7f7f7;
+//               }
+//               .container {
+//                 max-width: 600px;
+//                 margin: 0 auto;
+//                 background-color: #fff;
+//                 padding: 20px;
+//                 border-radius: 8px;
+//                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+//               }
+//               h1 {
+//                 font-size: 24px;
+//                 margin-bottom: 20px;
+//               }
+//               pre {
+//                 background-color: #f3f3f3;
+//                 padding: 10px;
+//                 border-radius: 4px;
+//                 overflow-x: auto;
+//               }
+//               .copy-button {
+//                 margin-top: 10px;
+//                 padding: 8px 16px;
+//                 background-color: #4caf50;
+//                 color: #fff;
+//                 border: none;
+//                 border-radius: 4px;
+//                 cursor: pointer;
+//               }
+//               .copy-button:hover {
+//                 background-color: #45a049;
+//               }
+//             </style>
+//           </head>
+//           <body>
+//             <div class="container">
+//               <h1>Payment URL</h1>
+//               <p>Copy the following URL to proceed with the payment:</p>
+//               <a href=${url}>url</a>
+//               <pre id="url">${url}</pre>
+//               <button class="copy-button" onclick="copyUrl()">Copy URL</button>
+//             </div>
+//             <script>
+//               function copyUrl() {
+//                 var urlElement = document.getElementById('url');
+//                 var range = document.createRange();
+//                 range.selectNode(urlElement);
+//                 window.getSelection().removeAllRanges();
+//                 window.getSelection().addRange(range);
+//                 document.execCommand('copy');
+//                 window.getSelection().removeAllRanges();
+//                 alert('URL copied to clipboard!');
+//               }
+//             </script>
+//           </body>
+//           </html>
+//         `);
+//       })
+//       .catch(function (error) {
+//         res.send("false");
 
-        console.error(error);
-      });
-  } catch (error) {
-    res.status(500).send({
-      message: error.message,
-      success: false,
-    });
-  }
+//         console.error(error);
+//       });
+//   } catch (error) {
+//     res.status(500).send({
+//       message: error.message,
+//       success: false,
+//     });
+//   }
+// });
+
+// app.post("/redirect-url/:merchantTransactionId", async (req, res) => {
+//   const { merchantTransactionId } = req.params;
+//   console.log(merchantTransactionId);
+//   if (merchantTransactionId) {
+//     const xVerify =
+//       sha256(
+//         `/pg/v1/status/${MERCHANT_ID}/${merchantTransactionId}` + SALT_KEY
+//       ) +
+//       "###" +
+//       SALT_INDEX;
+//     const options = {
+//       method: "GET",
+//       url: `${PHONE_PE_HOST_URL}/pg/v1/status/${MERCHANT_ID}/${merchantTransactionId}`,
+//       headers: {
+//         accept: "application/json",
+//         "Content-Type": "application/json",
+//         "X-MERCHANT-ID": MERCHANT_ID,
+//         "X-VERIFY": xVerify,
+//       },
+//     };
+//     axios
+//       .request(options)
+//       .then(async (response) => {
+//         console.log(response.data);
+//         if (response.data.success === true) {
+//           // Create a new student
+//           const student = new Student(req.body.Student);
+//           const savedStudent = await student.save();
+
+//           // Retrieve the coupon name from the cookie
+//           const couponName = req.cookies.coupon;
+//           const discountedPrice = req.cookies.discountedPrice;
+
+//           // Find and decrement the coupon quantity
+//           const updatedCoupon = await Coupons.findOneAndUpdate(
+//             { Name: couponName },
+//             { $inc: { Coupon_qty: -1 } }, // Decrement the count by 1
+//             { new: true } // Return the updated document
+//           );
+
+//           // Update admin earnings
+//           const updatedAdmin = await Admin.findOneAndUpdate(
+//             {},
+//             {
+//               $inc: { earnings: discountedPrice },
+//               $push: { students: savedStudent._id },
+//             }, // Push the student's ID to the students array
+//             { new: true }
+//           );
+//           // Retrieve user's details from cookies
+//           const amount = req.cookies.discountedPrice || "N/A";
+//           const name = req.cookies.name || "N/A";
+//           const mobileNumber = req.cookies.mobile || "N/A";
+//           const coupon = req.cookies.coupon || "N/A";
+
+//           // Create a transporter object using the default SMTP transport
+//           let transporter = nodemailer.createTransport({
+//             host: "smtp.gmail.com",
+//             port: 587,
+//             secure: false, // true for 465, false for other ports
+//             auth: {
+//               user: "manan27bhasin@gmail.com", // your email address
+//               pass: "nzsg lien pykp bywr", // your email password
+//             },
+//           });
+
+//           // Setup email data
+//           let mailOptions = {
+//             from: '"Your Company" <sender@example.com>', // sender address
+//             to: `${req.cookies.email}`, // recipient address
+//             subject: "Invoice Notification", // Subject line
+//             html: generateEmailContent(amount, name, mobileNumber, coupon), // HTML email content with dynamic values
+//           };
+
+//           // Send email
+//           transporter.sendMail(mailOptions, (error, info) => {
+//             if (error) {
+//               console.log("Error sending email:", error);
+//               res.status(500).send("Failed to send email");
+//             } else {
+//               console.log("Email sent:", info.response);
+//               res.status(200).send("Email sent successfully");
+//             }
+//           });
+//         } else {
+//           console.log("   ********************** ===>   ", response.data);
+//         }
+//       })
+//       .catch((error) => {
+//         res.json(error);
+//       });
+//   } else {
+//     res.send({ error: "Error" });
+//   }
+// });
+
+//*********************** PAYTM PAYMENT ***************** */
+app.post("/pay", [parseUrl, parseJson], (req, res) => {
+  var paymentDetails = {
+    amount: req.cookies.discountedPrice,
+    customerId: req.cookies.name,
+    customerEmail: req.cookies.email,
+    customerPhone: req.cookies.mobile,
+  };
+
+  var params = {};
+  params["MID"] = config.PaytmConfig.mid;
+  params["WEBSITE"] = config.PaytmConfig.website;
+  params["CHANNEL_ID"] = "WEB";
+  params["INDUSTRY_TYPE_ID"] = "Retail";
+  params["ORDER_ID"] = "TEST_" + new Date().getTime();
+  params["CUST_ID"] = paymentDetails.customerId;
+  params["TXN_AMOUNT"] = paymentDetails.amount;
+  params["CALLBACK_URL"] = "http://localhost:3000/callback";
+  params["EMAIL"] = paymentDetails.customerEmail;
+  params["MOBILE_NO"] = paymentDetails.customerPhone;
+
+  checksum_lib.genchecksum(
+    params,
+    config.PaytmConfig.key,
+    function (err, checksum) {
+      // var txn_url = "https://securegw-stage.paytm.in/theia/processTransaction"; // for staging
+      var txn_url = "https://securegw.paytm.in/theia/processTransaction"; // for production
+
+      var form_fields = "";
+      for (var x in params) {
+        form_fields +=
+          "<input type='hidden' name='" + x + "' value='" + params[x] + "' >";
+      }
+      form_fields +=
+        "<input type='hidden' name='CHECKSUMHASH' value='" + checksum + "' >";
+
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.write(
+        '<html><head><title>Merchant Checkout Page</title></head><body><center><h1>Please do not refresh this page...</h1></center><form method="post" action="' +
+          txn_url +
+          '" name="f1">' +
+          form_fields +
+          '</form><script type="text/javascript">document.f1.submit();</script></body></html>'
+      );
+      res.end();
+    }
+  );
 });
 
-app.post("/redirect-url/:merchantTransactionId", async (req, res) => {
-  const { merchantTransactionId } = req.params;
-  console.log(merchantTransactionId);
-  if (merchantTransactionId) {
-    const xVerify =
-      sha256(
-        `/pg/v1/status/${MERCHANT_ID}/${merchantTransactionId}` + SALT_KEY
-      ) +
-      "###" +
-      SALT_INDEX;
-    const options = {
-      method: "GET",
-      url: `${PHONE_PE_HOST_URL}/pg/v1/status/${MERCHANT_ID}/${merchantTransactionId}`,
-      headers: {
-        accept: "application/json",
-        "Content-Type": "application/json",
-        "X-MERCHANT-ID": MERCHANT_ID,
-        "X-VERIFY": xVerify,
-      },
-    };
-    axios
-      .request(options)
-      .then((response) => {
-        console.log(response.data);
-        if (response.data.success === true) {
-          // Retrieve user's details from cookies
-          const amount = req.cookies.discountedPrice || "N/A";
-          const name = req.cookies.name || "N/A";
-          const mobileNumber = req.cookies.mobile || "N/A";
-          const coupon = req.cookies.coupon || "N/A";
+app.post("/callback", (req, res) => {
+  var body = "";
 
-          // Create a transporter object using the default SMTP transport
-          let transporter = nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 587,
-            secure: false, // true for 465, false for other ports
-            auth: {
-              user: "manan27bhasin@gmail.com", // your email address
-              pass: "nzsg lien pykp bywr", // your email password
-            },
+  req.on("data", function (data) {
+    body += data;
+  });
+
+  req.on("end", function () {
+    var html = "";
+    var post_data = qs.parse(body);
+
+    // received params in callback
+    console.log("Callback Response: ", post_data, "\n");
+
+    // verify the checksum
+    var checksumhash = post_data.CHECKSUMHASH;
+    // delete post_data.CHECKSUMHASH;
+    var result = checksum_lib.verifychecksum(
+      post_data,
+      config.PaytmConfig.key,
+      checksumhash
+    );
+    console.log("Checksum Result => ", result, "\n");
+
+    // Send Server-to-Server request to verify Order Status
+    var params = { MID: config.PaytmConfig.mid, ORDERID: post_data.ORDERID };
+
+    checksum_lib.genchecksum(
+      params,
+      config.PaytmConfig.key,
+      function (err, checksum) {
+        params.CHECKSUMHASH = checksum;
+        post_data = "JsonData=" + JSON.stringify(params);
+
+        var options = {
+          // hostname: "securegw-stage.paytm.in", // for staging
+          hostname: "securegw.paytm.in", // for production
+          port: 443,
+          path: "/merchant-status/getTxnStatus",
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Content-Length": post_data.length,
+          },
+        };
+
+        // Set up the request
+        var response = "";
+        var post_req = https.request(options, function (post_res) {
+          post_res.on("data", function (chunk) {
+            response += chunk;
           });
 
-          // Setup email data
-          let mailOptions = {
-            from: '"Your Company" <sender@example.com>', // sender address
-            to: `${req.cookies.email}`, // recipient address
-            subject: "Invoice Notification", // Subject line
-            html: generateEmailContent(amount, name, mobileNumber, coupon), // HTML email content with dynamic values
-          };
+          post_res.on("end", function () {
+            console.log("S2S Response: ", response, "\n");
+            // res.send(response);
 
-          // Send email
-          transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-              console.log("Error sending email:", error);
-              res.status(500).send("Failed to send email");
+            var _result = JSON.parse(response);
+            if (_result.STATUS == "TXN_SUCCESS") {
+              res.send("payment success");
             } else {
-              console.log("Email sent:", info.response);
-              res.status(200).send("Email sent successfully");
+              res.send("payment failed");
             }
+
+            // res.render("response", {
+            //   data: _result,
+            // });
           });
-        } else {
-          console.log("   ********************** ===>   ", response.data);
-        }
-      })
-      .catch((error) => {
-        res.json(error);
-      });
-  } else {
-    res.send({ error: "Error" });
-  }
+        });
+
+        // post the data
+        post_req.write(post_data);
+        post_req.end();
+      }
+    );
+  });
 });
 
 const port = process.env.PORT || 3000;
