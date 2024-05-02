@@ -36,13 +36,38 @@ const {
 
 const expressSession = require("express-session");
 
+// Set Content Security Policy headers
+app.use((req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; img-src 'self'"
+  );
+  next();
+});
+// const whitelist = ["http://localhost:3000"];
+
+// const corsOptions = {
+//   origin: (origin, callback) => {
+//     if (!origin || whitelist.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error("Not allowed by CORS"));
+//     }
+//   },
+//   credentials: true,
+// };
+
+const corsOptions = {
+  origin: "*",
+  credentials: true,
+};
+
 //Middlewares
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.engine("ejs", ejsmate);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
 app.use("/public", express.static(path.join(__dirname, "public")));
 app.use(methodOverride("_method"));
 app.use(bodyParser.json());
@@ -51,6 +76,7 @@ app.use(
     extended: true,
   })
 );
+app.use(cors(corsOptions));
 const parseUrl = express.urlencoded({ extended: false });
 const parseJson = express.json({ extended: false });
 app.use("/callback", cors());
@@ -461,6 +487,7 @@ function generateEmailContent(amount, name, mobileNumber, coupon) {
 // });
 
 app.get("/test", (req, res) => {
+  // res.send(req.hostname);
   res.render("test.ejs");
 });
 
@@ -694,6 +721,7 @@ app.get("/test", (req, res) => {
 // });
 
 //*********************** PAYTM PAYMENT ***************** */
+
 app.post("/pay", [parseUrl, parseJson], (req, res) => {
   var paymentDetails = {
     amount: req.cookies.discountedPrice,
@@ -710,7 +738,7 @@ app.post("/pay", [parseUrl, parseJson], (req, res) => {
   params["ORDER_ID"] = "TEST_" + new Date().getTime();
   params["CUST_ID"] = paymentDetails.customerId;
   params["TXN_AMOUNT"] = paymentDetails.amount;
-  params["CALLBACK_URL"] = `https://${req.hostname}/callback`;
+  params["CALLBACK_URL"] = "http://localhost:3000/callback";
   params["EMAIL"] = paymentDetails.customerEmail;
   params["MOBILE_NO"] = paymentDetails.customerPhone;
 
