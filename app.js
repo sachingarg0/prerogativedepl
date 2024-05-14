@@ -926,7 +926,7 @@ app.get("/test", (req, res) => {
 //     post_req.end();
 //   });
 // });
-const orderId = "order_1135";
+const orderId = "order_1136";
 
 app.get("/pay", (req, res) => {
   var paytmParams = {};
@@ -935,7 +935,7 @@ app.get("/pay", (req, res) => {
     mid: Config.MID,
     websiteName: Config.WEBSITE,
     orderId: orderId,
-    callbackUrl: "http://localhost:3000/callback",
+    callbackUrl: "https://pg-internship.onrender.com/callback",
     txnAmount: {
       value: 1,
       currency: "INR",
