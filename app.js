@@ -28,15 +28,26 @@ const https = require("https");
 const qs = require("querystring");
 const checksum_lib = require("./Routes/Paytm/checksum.js");
 const config = require("./Routes/Paytm/config.js");
-
+// const PaytmChecksum = require("./PaytmChecksum");
+const PaytmChecksum = require("paytmchecksum");
+const Config = require("./config");
+app.use(express.static("./assets"));
+app.use(
+  "/assets",
+  express.static("assets", {
+    setHeaders: (res, path, stat) => {
+      if (path.endsWith(".js")) {
+        res.set("Content-Type", "text/javascript");
+      }
+    },
+  })
+);
 const {
   initializingPassport,
   isAuthenticated,
 } = require("./passportConfig.js");
 
 const expressSession = require("express-session");
-
-// Set Content Security Policy headers
 
 // const whitelist = ["http://localhost:3000"];
 
@@ -60,6 +71,7 @@ const corsOptions = {
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.engine("ejs", ejsmate);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/public", express.static(path.join(__dirname, "public")));
@@ -716,129 +728,355 @@ app.get("/test", (req, res) => {
 
 //*********************** PAYTM PAYMENT ***************** */
 
-app.post("/pay", [parseUrl, parseJson], (req, res) => {
-  var paymentDetails = {
-    amount: req.cookies.discountedPrice,
-    customerId: req.cookies.name,
-    customerEmail: req.cookies.email,
-    customerPhone: req.cookies.mobile,
+// app.post("/pay", [parseUrl, parseJson], (req, res) => {
+//   var paymentDetails = {
+//     amount: req.cookies.discountedPrice,
+//     customerId: req.cookies.name,
+//     customerEmail: req.cookies.email,
+//     customerPhone: req.cookies.mobile,
+//   };
+
+//   var params = {};
+//   params["MID"] = config.PaytmConfig.mid;
+//   params["WEBSITE"] = config.PaytmConfig.website;
+//   params["CHANNEL_ID"] = "WEB";
+//   params["INDUSTRY_TYPE_ID"] = "Retail";
+//   params["ORDER_ID"] = "TEST_" + new Date().getTime();
+//   params["CUST_ID"] = paymentDetails.customerId;
+//   params["TXN_AMOUNT"] = paymentDetails.amount;
+//   params["CALLBACK_URL"] = "http://localhost:3000/callback";
+//   params["EMAIL"] = paymentDetails.customerEmail;
+//   params["MOBILE_NO"] = paymentDetails.customerPhone;
+
+//   checksum_lib.genchecksum(
+//     params,
+//     config.PaytmConfig.key,
+//     function (err, checksum) {
+//       // var txn_url = "https://securegw-stage.paytm.in/theia/processTransaction"; // for staging
+//       var txn_url = "https://securegw.paytm.in/theia/processTransaction"; // for production
+
+//       var form_fields = "";
+//       for (var x in params) {
+//         form_fields +=
+//           "<input type='hidden' name='" + x + "' value='" + params[x] + "' >";
+//       }
+//       form_fields +=
+//         "<input type='hidden' name='CHECKSUMHASH' value='" + checksum + "' >";
+
+//       res.writeHead(200, { "Content-Type": "text/html" });
+//       res.write(
+//         '<html><head><title>Merchant Checkout Page</title></head><body><center><h1>Please do not refresh this page...</h1></center><form method="post" action="' +
+//           txn_url +
+//           '" name="f1">' +
+//           form_fields +
+//           '</form><script type="text/javascript">document.f1.submit();</script></body></html>'
+//       );
+//       res.end();
+//     }
+//   );
+// });
+
+// app.post("/callback", (req, res) => {
+//   var body = "";
+
+//   req.on("data", function (data) {
+//     body += data;
+//   });
+
+//   req.on("end", function () {
+//     var html = "";
+//     var post_data = qs.parse(body);
+
+//     // received params in callback
+//     console.log("Callback Response: ", post_data, "\n");
+
+//     // verify the checksum
+//     var checksumhash = post_data.CHECKSUMHASH;
+//     // delete post_data.CHECKSUMHASH;
+//     var result = checksum_lib.verifychecksum(
+//       post_data,
+//       config.PaytmConfig.key,
+//       checksumhash
+//     );
+//     console.log("Checksum Result => ", result, "\n");
+
+//     // Send Server-to-Server request to verify Order Status
+//     var params = { MID: config.PaytmConfig.mid, ORDERID: post_data.ORDERID };
+
+//     checksum_lib.genchecksum(
+//       params,
+//       config.PaytmConfig.key,
+//       function (err, checksum) {
+//         params.CHECKSUMHASH = checksum;
+//         post_data = "JsonData=" + JSON.stringify(params);
+
+//         var options = {
+//           // hostname: "securegw-stage.paytm.in", // for staging
+//           hostname: "securegw.paytm.in", // for production
+//           port: 443,
+//           path: "/merchant-status/getTxnStatus",
+//           method: "POST",
+//           headers: {
+//             "Content-Type": "application/x-www-form-urlencoded",
+//             "Content-Length": post_data.length,
+//           },
+//         };
+
+//         // Set up the request
+//         var response = "";
+//         var post_req = https.request(options, function (post_res) {
+//           post_res.on("data", function (chunk) {
+//             response += chunk;
+//           });
+
+//           post_res.on("end", function () {
+//             console.log("S2S Response: ", response, "\n");
+//             // res.send(response);
+
+//             var _result = JSON.parse(response);
+//             if (_result.STATUS == "TXN_SUCCESS") {
+//               res.send("payment success");
+//             } else {
+//               res.send("payment failed");
+//             }
+
+//             // res.render("response", {
+//             //   data: _result,
+//             // });
+//           });
+//         });
+
+//         // post the data
+//         post_req.write(post_data);
+//         post_req.end();
+//       }
+//     );
+//   });
+// });html
+
+// ******************** PAYTM UPDATED *************************
+// app.get("/pay", (req, res) => {
+//   var paytmParams = {};
+//   const orderId = "order_1111";
+//   paytmParams.body = {
+//     requestType: "Payment",
+//     mid: Config.MID,
+//     websiteName: Config.WEBSITE,
+//     orderId: orderId,
+//     callbackUrl: "http://localhost:3000/callback",
+//     txnAmount: {
+//       value: 1,
+//       currency: "INR",
+//     },
+//     userInfo: {
+//       custId: "CUST_001",
+//     },
+//   };
+
+//   PaytmChecksum.generateSignature(
+//     JSON.stringify(paytmParams.body),
+//     Config.MKEY
+//   ).then(function (checksum) {
+//     paytmParams.head = {
+//       signature: checksum,
+//     };
+
+//     var post_data = JSON.stringify(paytmParams);
+
+//     var options = {
+//       /* for Staging */
+//       hostname: Config.ENV,
+//       port: 443,
+//       path:
+//         "/theia/api/v1/initiateTransaction?mid=" +
+//         Config.MID +
+//         "&orderId=" +
+//         orderId,
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//         "Content-Length": post_data.length,
+//       },
+//     };
+//     var obj = {};
+//     var response = "";
+//     var post_req = https.request(options, function (post_res) {
+//       post_res.on("data", function (chunk) {
+//         response += chunk;
+//       });
+//       post_res.on("end", function () {
+//         var obj = JSON.parse(response);
+
+//         var data = {
+//           env: Config.ENV,
+//           mid: Config.MID,
+//           amount: 1,
+//           orderid: orderId,
+//           txntoken: obj.body.txnToken,
+//         };
+//         console.log(obj);
+
+//         // Define the path to your HTML file
+//         const filePath = path.join(__dirname, "index.html");
+//         // Send the HTML file as the response with data
+//         res.render("index.ejs", { data });
+//       });
+//     });
+//     post_req.write(post_data);
+//     post_req.end();
+//   });
+// });
+const orderId = "order_1134";
+
+app.get("/pay", (req, res) => {
+  var paytmParams = {};
+  paytmParams.body = {
+    requestType: "Payment",
+    mid: Config.MID,
+    websiteName: Config.WEBSITE,
+    orderId: orderId,
+    callbackUrl: "http://localhost:3000/callback",
+    txnAmount: {
+      value: 1,
+      currency: "INR",
+    },
+    userInfo: {
+      custId: "CUST_001",
+    },
   };
 
-  var params = {};
-  params["MID"] = config.PaytmConfig.mid;
-  params["WEBSITE"] = config.PaytmConfig.website;
-  params["CHANNEL_ID"] = "WEB";
-  params["INDUSTRY_TYPE_ID"] = "Retail";
-  params["ORDER_ID"] = "TEST_" + new Date().getTime();
-  params["CUST_ID"] = paymentDetails.customerId;
-  params["TXN_AMOUNT"] = paymentDetails.amount;
-  params["CALLBACK_URL"] = "https://pg-internship.onrender.com/callback";
-  params["EMAIL"] = paymentDetails.customerEmail;
-  params["MOBILE_NO"] = paymentDetails.customerPhone;
+  PaytmChecksum.generateSignature(
+    JSON.stringify(paytmParams.body),
+    Config.MKEY
+  ).then(function (checksum) {
+    paytmParams.head = {
+      signature: checksum,
+    };
 
-  checksum_lib.genchecksum(
-    params,
-    config.PaytmConfig.key,
-    function (err, checksum) {
-      // var txn_url = "https://securegw-stage.paytm.in/theia/processTransaction"; // for staging
-      var txn_url = "https://securegw.paytm.in/theia/processTransaction"; // for production
+    var post_data = JSON.stringify(paytmParams);
+    console.log(post_data);
 
-      var form_fields = "";
-      for (var x in params) {
-        form_fields +=
-          "<input type='hidden' name='" + x + "' value='" + params[x] + "' >";
-      }
-      form_fields +=
-        "<input type='hidden' name='CHECKSUMHASH' value='" + checksum + "' >";
+    var options = {
+      /* for Staging */
+      hostname: Config.ENV,
+      port: 443,
+      path:
+        "/theia/api/v1/initiateTransaction?mid=" +
+        Config.MID +
+        "&orderId=" +
+        orderId,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": post_data.length,
+      },
+    };
 
-      res.writeHead(200, { "Content-Type": "text/html" });
-      res.write(
-        '<html><head><title>Merchant Checkout Page</title></head><body><center><h1>Please do not refresh this page...</h1></center><form method="post" action="' +
-          txn_url +
-          '" name="f1">' +
-          form_fields +
-          '</form><script type="text/javascript">document.f1.submit();</script></body></html>'
-      );
-      res.end();
-    }
-  );
+    var response = "";
+    var post_req = https.request(options, function (post_res) {
+      post_res.on("data", function (chunk) {
+        response += chunk;
+      });
+      var obj = {};
+      post_res.on("end", function () {
+        var obj = JSON.parse(response);
+        var data = {
+          env: Config.ENV,
+          mid: Config.MID,
+          amount: 1,
+          orderid: orderId,
+          txntoken: obj.body.txnToken,
+        };
+
+        res.render("index.ejs", { data: data });
+      });
+    });
+    post_req.write(post_data);
+    post_req.end();
+  });
 });
 
 app.post("/callback", (req, res) => {
-  var body = "";
-
-  req.on("data", function (data) {
-    body += data;
+  let body = "";
+  req.on("data", (chunk) => {
+    body += chunk.toString();
   });
 
-  req.on("end", function () {
-    var html = "";
-    var post_data = qs.parse(body);
+  console.log(body);
+  req.on("end", () => {
+    var postbodyjson = parse(body);
+    postbodyjson = JSON.parse(JSON.stringify(postbodyjson));
+    console.log(postbodyjson);
 
-    // received params in callback
-    console.log("Callback Response: ", post_data, "\n");
+    var checksum = postbodyjson.CHECKSUMHASH;
+    delete postbodyjson["CHECKSUMHASH"];
 
-    // verify the checksum
-    var checksumhash = post_data.CHECKSUMHASH;
-    // delete post_data.CHECKSUMHASH;
-    var result = checksum_lib.verifychecksum(
-      post_data,
-      config.PaytmConfig.key,
-      checksumhash
+    var verifyChecksum = PaytmChecksum.verifySignature(
+      postbodyjson,
+      Config.MKEY,
+      checksum
     );
-    console.log("Checksum Result => ", result, "\n");
+    if (verifyChecksum) {
+      res.render("callback.ejs", {
+        verifySignature: "true",
+        data: postbodyjson,
+      });
+      // res.redirect("/txnstatus");
+    } else {
+      res.render("callback.ejs", {
+        verifySignature: "false",
+        data: postbodyjson,
+      });
+    }
+  });
+});
 
-    // Send Server-to-Server request to verify Order Status
-    var params = { MID: config.PaytmConfig.mid, ORDERID: post_data.ORDERID };
+app.get("/txnstatus", (req, res) => {
+  var paytmParams = {};
 
-    checksum_lib.genchecksum(
-      params,
-      config.PaytmConfig.key,
-      function (err, checksum) {
-        params.CHECKSUMHASH = checksum;
-        post_data = "JsonData=" + JSON.stringify(params);
+  /* body parameters */
+  paytmParams.body = {
+    mid: Config.MID,
+    /* Enter your order id which needs to be check status for */
+    orderId: orderId,
+  };
+  PaytmChecksum.generateSignature(
+    JSON.stringify(paytmParams.body),
+    Config.MKEY
+  ).then(function (checksum) {
+    /* head parameters */
+    paytmParams.head = {
+      signature: checksum,
+    };
+    /* prepare JSON string for request */
+    var post_data = JSON.stringify(paytmParams);
 
-        var options = {
-          // hostname: "securegw-stage.paytm.in", // for staging
-          hostname: "securegw.paytm.in", // for production
-          port: 443,
-          path: "/merchant-status/getTxnStatus",
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Content-Length": post_data.length,
-          },
-        };
+    var options = {
+      hostname: Config.ENV,
+      port: 443,
+      path: "/v3/order/status",
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": post_data.length,
+      },
+    };
+    var response = "";
+    var post_req = https.request(options, function (post_res) {
+      post_res.on("data", function (chunk) {
+        response += chunk;
+      });
 
-        // Set up the request
-        var response = "";
-        var post_req = https.request(options, function (post_res) {
-          post_res.on("data", function (chunk) {
-            response += chunk;
-          });
-
-          post_res.on("end", function () {
-            console.log("S2S Response: ", response, "\n");
-            // res.send(response);
-
-            var _result = JSON.parse(response);
-            if (_result.STATUS == "TXN_SUCCESS") {
-              res.send("payment success");
-            } else {
-              res.send("payment failed");
-            }
-
-            // res.render("response", {
-            //   data: _result,
-            // });
-          });
+      post_res.on("end", function () {
+        var obj = JSON.parse(response);
+        res.render("txnstatus.ejs", {
+          data: obj.body,
+          msg: obj.body.resultInfo.resultMsg,
         });
-
-        // post the data
-        post_req.write(post_data);
-        post_req.end();
-      }
-    );
+      });
+    });
+    post_req.write(post_data);
+    post_req.end();
   });
 });
 
