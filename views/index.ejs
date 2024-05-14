@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Paytm JS Checkout - NodeJs</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+      crossorigin="anonymous"
+    />
+    <script
+      type="application/javascript"
+      crossorigin="anonymous"
+      src="https://securegw.paytm.in/merchantpgpui/checkoutjs/merchants/PREROG28318988834649.js "
+    ></script>
+    <script
+      type="application/javascript"
+      crossorigin="anonymous"
+      src="../assets/script.js"
+    ></script>
+  </head>
+  <body>
+    <div class="container text-center">
+      <div class="shadow p-3 mb-5 bg-white rounded">
+        <h2>Paytm JS Checkout - NodeJs</h2>
+        <h4>Make Payment</h4>
+        <p>You are making payment of ₹1</p>
+        <div class="btn-area">
+          <button
+            type="button"
+            id="jsCheckoutPayment"
+            name="submit"
+            class="btn btn-primary"
+          >
+            Pay Now
+          </button>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Embed server-side data into the client-side JavaScript
+      const orderid = "<%= data.orderid %>";
+      const txntoken = "<%= data.txntoken %>";
+      const amount = "<%= data.amount %>";
+
+      document
+        .getElementById("jsCheckoutPayment")
+        .addEventListener("click", function () {
+          openJsCheckoutPopup(orderid, txntoken, amount);
+        });
+
+      function openJsCheckoutPopup(orderId, txnToken, amount) {
+        console.log("Initializing Paytm CheckoutJS with:");
+        console.log("Order ID:", orderId);
+        console.log("Transaction Token:", txnToken);
+        console.log("Amount:", amount);
+
+        var config = {
+          root: "",
+          flow: "DEFAULT",
+          data: {
+            orderId: orderId,
+            token: txnToken,
+            tokenType: "TXN_TOKEN",
+            amount: amount,
+          },
+          merchant: {
+            redirect: true,
+          },
+          handler: {
+            notifyMerchant: function (eventName, data) {
+              console.log("notifyMerchant handler function called");
+              console.log("eventName => ", eventName);
+              console.log("data => ", data);
+            },
+          },
+        };
+
+        if (window.Paytm && window.Paytm.CheckoutJS) {
+          console.log("Paytm CheckoutJS found, initializing...");
+          window.Paytm.CheckoutJS.init(config)
+            .then(function onSuccess() {
+              console.log("Paytm CheckoutJS initialized successfully");
+              // After successfully updating configuration, invoke checkoutjs
+              window.Paytm.CheckoutJS.invoke();
+            })
+            .catch(function onError(error) {
+              console.error("Error during Paytm CheckoutJS initialization:");
+              console.error(error);
+            });
+        } else {
+          console.error(
+            "Paytm CheckoutJS is not available on the window object"
+          );
+        }
+      }
+    </script>
+  </body>
+</html>
