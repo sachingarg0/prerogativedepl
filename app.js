@@ -933,8 +933,10 @@ function generateUniqueOrderId() {
   return `order_${timestamp}_${randomPart}`;
 }
 
-const orderId = generateUniqueOrderId();
+// const orderId = generateUniqueOrderId();
 app.post("/pay", async (req, res) => {
+   const orderId = generateUniqueOrderId(); // Generate a unique order ID
+  res.cookie("orderId", orderId, { maxAge: 24 * 60 * 60 * 1000 }); // Store orderId in a cookie
   // Create a new student
   const student = new Student(req.body.Student);
   const savedStudent = await student.save();
@@ -1064,6 +1066,7 @@ app.post("/callback", (req, res) => {
 });
 
 app.post("/txnstatus", async (req, res) => {
+  const orderId = req.cookies.orderId; // Retrieve orderId from cookie
   var paytmParams = {};
 
   /* body parameters */
