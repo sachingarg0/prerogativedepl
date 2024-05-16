@@ -966,7 +966,7 @@ app.post("/pay", async (req, res) => {
     mid: Config.MID,
     websiteName: Config.WEBSITE,
     orderId: orderId,
-    callbackUrl: "http://localhost:3000/txnstatus",
+    callbackUrl: "https://pg-internship.onrender.com/txnstatus",
     txnAmount: {
       value: req.cookies.discountedPrice,
       currency: "INR",
