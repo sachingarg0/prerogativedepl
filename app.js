@@ -926,18 +926,49 @@ app.get("/test", (req, res) => {
 //     post_req.end();
 //   });
 // });
-const orderId = "order_1139";
 
-app.get("/pay", (req, res) => {
+function generateUniqueOrderId() {
+  const timestamp = Date.now(); // Current timestamp in milliseconds
+  const randomPart = Math.floor(Math.random() * 1000000); // Random number between 0 and 999999
+  return `order_${timestamp}_${randomPart}`;
+}
+
+const orderId = generateUniqueOrderId();
+app.post("/pay", async (req, res) => {
+  // Create a new student
+  const student = new Student(req.body.Student);
+  const savedStudent = await student.save();
+
+  // Retrieve the coupon name from the cookie
+  const couponName = req.cookies.coupon;
+  const discountedPrice = req.cookies.discountedPrice;
+
+  // Find and decrement the coupon quantity
+  const updatedCoupon = await Coupons.findOneAndUpdate(
+    { Name: couponName },
+    { $inc: { Coupon_qty: -1 } }, // Decrement the count by 1
+    { new: true } // Return the updated document
+  );
+
+  // Update admin earnings
+  const updatedAdmin = await Admin.findOneAndUpdate(
+    {},
+    {
+      $inc: { earnings: discountedPrice },
+      $push: { students: savedStudent._id },
+    }, // Push the student's ID to the students array
+    { new: true }
+  );
+
   var paytmParams = {};
   paytmParams.body = {
     requestType: "Payment",
     mid: Config.MID,
     websiteName: Config.WEBSITE,
     orderId: orderId,
-    callbackUrl: "https://pg-internship.onrender.com/callback",
+    callbackUrl: "http://localhost:3000/txnstatus",
     txnAmount: {
-      value: 1,
+      value: req.cookies.discountedPrice,
       currency: "INR",
     },
     userInfo: {
@@ -986,6 +1017,7 @@ app.get("/pay", (req, res) => {
           amount: 1,
           orderid: orderId,
           txntoken: obj.body.txnToken,
+          value: paytmParams.body.txnAmount.value,
         };
 
         res.render("index.ejs", { data: data });
@@ -1031,7 +1063,7 @@ app.post("/callback", (req, res) => {
   });
 });
 
-app.get("/txnstatus", (req, res) => {
+app.post("/txnstatus", async (req, res) => {
   var paytmParams = {};
 
   /* body parameters */
@@ -1069,12 +1101,54 @@ app.get("/txnstatus", (req, res) => {
 
       post_res.on("end", function () {
         var obj = JSON.parse(response);
+        // req.expressSession.msg = obj.body.resultInfo.resultMsg;
+        if (obj.body.resultInfo.resultStatus === "TXN_SUCCESS") {
+          // Retrieve user's details from cookies
+          const amount = req.cookies.discountedPrice || "N/A";
+          const name = req.cookies.name || "N/A";
+          const mobileNumber = req.cookies.mobile || "N/A";
+          const coupon = req.cookies.coupon || "N/A";
+          // Check for msg in session
+          const msg = req.session.msg || null;
+          delete req.session.msg; // Clear the message after reading it
+
+          // Create a transporter object using the default SMTP transport
+          let transporter = nodemailer.createTransport({
+            host: "smtp.gmail.com",
+            port: 587,
+            secure: false, // true for 465, false for other ports
+            auth: {
+              user: "manan27bhasin@gmail.com", // your email address
+              pass: "nzsg lien pykp bywr", // your email password
+            },
+          });
+
+          // Setup email data
+          let mailOptions = {
+            from: '"Your Company" <sender@example.com>', // sender address
+            to: `${req.cookies.email}`, // recipient address
+            subject: "Invoice Notification", // Subject line
+            html: generateEmailContent(amount, name, mobileNumber, coupon), // HTML email content with dynamic values
+          };
+
+          // Send email
+          transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+              console.log("Error sending email:", error);
+              // res.status(500).send("Failed to send email");
+            } else {
+              console.log("Email sent:", info.response);
+              // res.status(200).send("Email sent successfully");
+            }
+          });
+        }
         res.render("txnstatus.ejs", {
           data: obj.body,
           msg: obj.body.resultInfo.resultMsg,
         });
       });
     });
+
     post_req.write(post_data);
     post_req.end();
   });
