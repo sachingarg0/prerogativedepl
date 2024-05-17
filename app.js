@@ -28,6 +28,7 @@ const https = require("https");
 const qs = require("querystring");
 const checksum_lib = require("./Routes/Paytm/checksum.js");
 const config = require("./Routes/Paytm/config.js");
+const crypto = require("crypto");
 // const PaytmChecksum = require("./PaytmChecksum");
 const PaytmChecksum = require("paytmchecksum");
 const Config = require("./config");
@@ -220,6 +221,19 @@ app.get("/logout", (req, res) => {
   });
 });
 
+app.get("/privacy", (req, res) => {
+  res.render("privacy.ejs");
+});
+app.get("/terms", (req, res) => {
+  res.render("terms.ejs");
+});
+app.get("/refund", (req, res) => {
+  res.render("refundca.ejs");
+});
+app.get("/contactus", (req, res) => {
+  res.render("contactus.ejs");
+});
+
 app.get("/admin/dash", async (req, res) => {
   const admin = await Admin.findOne();
   res.render("dashboard.ejs", { admin });
@@ -269,13 +283,32 @@ app.get("/admin/mystudents", async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
+// Function to generate a hash for the discounted price
+// Encryption key used for encrypting and decrypting the discount value
+const encryptionKey = "poisonrock88998877";
 
+// Function to encrypt the discount value
+function encrypt(data, key) {
+  const cipher = crypto.createCipher("aes-256-cbc", key);
+  let encryptedData = cipher.update(data, "utf8", "hex");
+  encryptedData += cipher.final("hex");
+  return encryptedData;
+}
+
+// Function to decrypt the encrypted discount value
+function decrypt(data, key) {
+  const decipher = crypto.createDecipher("aes-256-cbc", key);
+  let decryptedData = decipher.update(data, "hex", "utf8");
+  decryptedData += decipher.final("utf8");
+  return decryptedData;
+}
 //Client Side Rendering
 app.get("/:id/details", async (req, res) => {
   let { id } = req.params;
   const Course = await Courses.findById(id);
   const discountedPrice = Course.discounted_price;
-  res.cookie("discountedPrice", discountedPrice, {
+  const encryptedPrice = encrypt(discountedPrice.toString(), encryptionKey);
+  res.cookie("discountedPrice", encryptedPrice, {
     maxAge: 24 * 60 * 60 * 1000,
   });
   let couponName = NaN;
@@ -324,7 +357,8 @@ app.post("/:id/details", async (req, res) => {
         (1 - Coupon.Discount / 100) * Course.discounted_price;
 
       res.cookie("coupon", couponName, { maxAge: 24 * 60 * 60 * 1000 });
-      res.cookie("discountedPrice", discountedPrice, {
+      const encryptedPrice = encrypt(discountedPrice.toString(), encryptionKey);
+      res.cookie("discountedPrice", encryptedPrice, {
         maxAge: 24 * 60 * 60 * 1000,
       });
 
@@ -336,9 +370,9 @@ app.post("/:id/details", async (req, res) => {
       });
     } else {
       const discountedPrice = Course.discounted_price;
-
       res.cookie("coupon", couponName, { maxAge: 24 * 60 * 60 * 1000 });
-      res.cookie("discountedPrice", discountedPrice, {
+      const encryptedPrice = encrypt(discountedPrice.toString(), encryptionKey);
+      res.cookie("discountedPrice", encryptedPrice, {
         maxAge: 24 * 60 * 60 * 1000,
       });
 
@@ -935,32 +969,19 @@ function generateUniqueOrderId() {
 
 // const orderId = generateUniqueOrderId();
 app.post("/pay", async (req, res) => {
-   const orderId = generateUniqueOrderId(); // Generate a unique order ID
+  const orderId = generateUniqueOrderId(); // Generate a unique order ID
   res.cookie("orderId", orderId, { maxAge: 24 * 60 * 60 * 1000 }); // Store orderId in a cookie
   // Create a new student
-  const student = new Student(req.body.Student);
-  const savedStudent = await student.save();
+  // const student = new Student(req.body.Student);
+  // const savedStudent = await student.save();
 
   // Retrieve the coupon name from the cookie
-  const couponName = req.cookies.coupon;
-  const discountedPrice = req.cookies.discountedPrice;
 
-  // Find and decrement the coupon quantity
-  const updatedCoupon = await Coupons.findOneAndUpdate(
-    { Name: couponName },
-    { $inc: { Coupon_qty: -1 } }, // Decrement the count by 1
-    { new: true } // Return the updated document
-  );
+  const encryptedPrice = req.cookies.discountedPrice;
 
-  // Update admin earnings
-  const updatedAdmin = await Admin.findOneAndUpdate(
-    {},
-    {
-      $inc: { earnings: discountedPrice },
-      $push: { students: savedStudent._id },
-    }, // Push the student's ID to the students array
-    { new: true }
-  );
+  // Decrypt the encrypted price
+  const discountedPrice = decrypt(encryptedPrice, encryptionKey);
+  // const discountedPrice = req.cookies.discountedPrice;
 
   var paytmParams = {};
   paytmParams.body = {
@@ -970,7 +991,7 @@ app.post("/pay", async (req, res) => {
     orderId: orderId,
     callbackUrl: "https://pg-internship.onrender.com/txnstatus",
     txnAmount: {
-      value: req.cookies.discountedPrice,
+      value: discountedPrice,
       currency: "INR",
     },
     userInfo: {
@@ -1102,10 +1123,45 @@ app.post("/txnstatus", async (req, res) => {
         response += chunk;
       });
 
-      post_res.on("end", function () {
+      post_res.on("end", async function () {
         var obj = JSON.parse(response);
         // req.expressSession.msg = obj.body.resultInfo.resultMsg;
         if (obj.body.resultInfo.resultStatus === "TXN_SUCCESS") {
+          const studentDetails = {
+            name: req.cookies.name,
+            mobile: req.cookies.mobile,
+            year: req.cookies.year,
+            coursename: req.cookies.coursename,
+            email: req.cookies.email,
+          };
+
+          // Create a new student instance with the extracted details
+          const student = new Student(studentDetails);
+          const savedStudent = await student.save();
+          const couponName = req.cookies.coupon;
+
+          const encryptedPrice = req.cookies.discountedPrice;
+
+          // Decrypt the encrypted price
+          const discountedPrice = decrypt(encryptedPrice, encryptionKey);
+
+          // Find and decrement the coupon quantity
+          const updatedCoupon = await Coupons.findOneAndUpdate(
+            { Name: couponName },
+            { $inc: { Coupon_qty: -1 } }, // Decrement the count by 1
+            { new: true } // Return the updated document
+          );
+
+          // Update admin earnings
+          const updatedAdmin = await Admin.findOneAndUpdate(
+            {},
+            {
+              $inc: { earnings: discountedPrice },
+              $push: { students: savedStudent._id },
+            }, // Push the student's ID to the students array
+            { new: true }
+          );
+
           // Retrieve user's details from cookies
           const amount = req.cookies.discountedPrice || "N/A";
           const name = req.cookies.name || "N/A";
@@ -1117,18 +1173,18 @@ app.post("/txnstatus", async (req, res) => {
 
           // Create a transporter object using the default SMTP transport
           let transporter = nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 587,
-            secure: false, // true for 465, false for other ports
+            host: "smtp.hostinger.com",
+            port: 465,
+            secure: true, // true for 465, false for other ports
             auth: {
-              user: "manan27bhasin@gmail.com", // your email address
-              pass: "nzsg lien pykp bywr", // your email password
+              user: "training@prerogative.in", // your email address
+              pass: "Team@BNS1", // your email password
             },
           });
 
           // Setup email data
           let mailOptions = {
-            from: '"Your Company" <sender@example.com>', // sender address
+            from: "'Your Company' <training@prerogative.in>", // sender address
             to: `${req.cookies.email}`, // recipient address
             subject: "Invoice Notification", // Subject line
             html: generateEmailContent(amount, name, mobileNumber, coupon), // HTML email content with dynamic values
