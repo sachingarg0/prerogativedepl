@@ -18,12 +18,13 @@
             <th>Result Message</th>
             <td><%= msg %></td>
           </tr>
-          <% Object.keys(data).forEach(function(key) { %>
+          <% Object.keys(data).forEach(function(key) { if (!['resultInfo',
+          'txnId', 'txnType', 'gatewayName', 'mid'].includes(key)) { %>
           <tr>
             <td><%= key %></td>
             <td><%= data[key] %></td>
           </tr>
-          <% }); %>
+          <% } }); %>
         </table>
       </div>
     </div>
