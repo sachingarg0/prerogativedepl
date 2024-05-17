@@ -306,9 +306,13 @@ function decrypt(data, key) {
 app.get("/:id/details", async (req, res) => {
   let { id } = req.params;
   const Course = await Courses.findById(id);
+  const courseactname = Course.title;
   const discountedPrice = Course.discounted_price;
   const encryptedPrice = encrypt(discountedPrice.toString(), encryptionKey);
   res.cookie("discountedPrice", encryptedPrice, {
+    maxAge: 24 * 60 * 60 * 1000,
+  });
+  res.cookie("courseactname", courseactname, {
     maxAge: 24 * 60 * 60 * 1000,
   });
   let couponName = NaN;
@@ -430,7 +434,14 @@ app.post("/:id/details/payment", async (req, res) => {
 });
 
 // Define function to create HTML email content with dynamic values
-function generateEmailContent(amount, name, mobileNumber, coupon) {
+function generateEmailContent(
+  amount,
+  name,
+  mobileNumber,
+  coupon,
+  emaill,
+  courseactname
+) {
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -478,6 +489,8 @@ function generateEmailContent(amount, name, mobileNumber, coupon) {
           <p>Name: ${name}</p>
           <p>Mobile Number: ${mobileNumber}</p>
           <p>Coupon: ${coupon}</p>
+          <p>Email: ${emaill}</p>
+          <p>Course Name: ${courseactname}</p>
           <!-- Add more invoice details as needed -->
         </div>
         <p>Thank you for your business!</p>
@@ -966,11 +979,18 @@ function generateUniqueOrderId() {
   const randomPart = Math.floor(Math.random() * 1000000); // Random number between 0 and 999999
   return `order_${timestamp}_${randomPart}`;
 }
+function generateUniquecustId() {
+  const timestamp = Date.now(); // Current timestamp in milliseconds
+  const randomPart = Math.floor(Math.random() * 1000000); // Random number between 0 and 999999
+  return `CUST_${timestamp}_${randomPart}`;
+}
 
 // const orderId = generateUniqueOrderId();
 app.post("/pay", async (req, res) => {
   const orderId = generateUniqueOrderId(); // Generate a unique order ID
   res.cookie("orderId", orderId, { maxAge: 24 * 60 * 60 * 1000 }); // Store orderId in a cookie
+  const custId = generateUniquecustId(); // Generate a unique order ID
+  res.cookie("custId", custId, { maxAge: 24 * 60 * 60 * 1000 });
   // Create a new student
   // const student = new Student(req.body.Student);
   // const savedStudent = await student.save();
@@ -989,13 +1009,13 @@ app.post("/pay", async (req, res) => {
     mid: Config.MID,
     websiteName: Config.WEBSITE,
     orderId: orderId,
-    callbackUrl: "https://pg-internship.onrender.com/txnstatus",
+    callbackUrl: "http://localhost:3000/txnstatus",
     txnAmount: {
       value: discountedPrice,
       currency: "INR",
     },
     userInfo: {
-      custId: "CUST_001",
+      custId: custId,
     },
   };
 
@@ -1088,6 +1108,7 @@ app.post("/callback", (req, res) => {
 
 app.post("/txnstatus", async (req, res) => {
   const orderId = req.cookies.orderId; // Retrieve orderId from cookie
+  const custId = req.cookies.custId;
   var paytmParams = {};
 
   /* body parameters */
@@ -1163,10 +1184,12 @@ app.post("/txnstatus", async (req, res) => {
           );
 
           // Retrieve user's details from cookies
-          const amount = req.cookies.discountedPrice || "N/A";
+          const amount = discountedPrice || "N/A";
           const name = req.cookies.name || "N/A";
           const mobileNumber = req.cookies.mobile || "N/A";
           const coupon = req.cookies.coupon || "N/A";
+          const emaill = req.cookies.email || "N/A";
+          const courseactname = req.cookies.courseactname || "N/A";
           // Check for msg in session
           const msg = req.session.msg || null;
           delete req.session.msg; // Clear the message after reading it
@@ -1184,10 +1207,17 @@ app.post("/txnstatus", async (req, res) => {
 
           // Setup email data
           let mailOptions = {
-            from: "'Your Company' <training@prerogative.in>", // sender address
-            to: `${req.cookies.email}`, // recipient address
+            from: "'Prerogative Institute' <training@prerogative.in>", // sender address
+            to: `${req.cookies.email}, training@prerogative.in`, // recipient address
             subject: "Invoice Notification", // Subject line
-            html: generateEmailContent(amount, name, mobileNumber, coupon), // HTML email content with dynamic values
+            html: generateEmailContent(
+              amount,
+              name,
+              mobileNumber,
+              coupon,
+              emaill,
+              courseactname
+            ), // HTML email content with dynamic values
           };
 
           // Send email
