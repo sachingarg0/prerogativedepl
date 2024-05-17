@@ -13,7 +13,7 @@
     <script
       type="application/javascript"
       crossorigin="anonymous"
-      src="https://securegw.paytm.in/merchantpgpui/checkoutjs/merchants/PREROG28318988834649.js "
+      src="https://securegw.paytm.in/merchantpgpui/checkoutjs/merchants/PREROG28318988834649.js"
     ></script>
     <script
       type="application/javascript"
@@ -22,34 +22,12 @@
     ></script>
   </head>
   <body>
-    <div class="container text-center">
-      <div class="shadow p-3 mb-5 bg-white rounded">
-        <h2>Paytm JS Checkout - NodeJs</h2>
-        <h4>Make Payment</h4>
-        <p>You are making payment of ₹1</p>
-        <div class="btn-area">
-          <button
-            type="button"
-            id="jsCheckoutPayment"
-            name="submit"
-            class="btn btn-primary"
-          >
-            Pay Now
-          </button>
-        </div>
-      </div>
-    </div>
+    <div class="container text-center"></div>
     <script>
       // Embed server-side data into the client-side JavaScript
       const orderid = "<%= data.orderid %>";
       const txntoken = "<%= data.txntoken %>";
       const amount = "<%= data.amount %>";
-
-      document
-        .getElementById("jsCheckoutPayment")
-        .addEventListener("click", function () {
-          openJsCheckoutPopup(orderid, txntoken, amount);
-        });
 
       function openJsCheckoutPopup(orderId, txnToken, amount) {
         console.log("Initializing Paytm CheckoutJS with:");
@@ -96,6 +74,13 @@
           );
         }
       }
+
+      // Automatically run the payment function 3 seconds after the page loads
+      document.addEventListener("DOMContentLoaded", function () {
+        setTimeout(function () {
+          openJsCheckoutPopup(orderid, txntoken, amount);
+        }, 1000);
+      });
     </script>
   </body>
 </html>
