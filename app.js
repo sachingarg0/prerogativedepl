@@ -404,7 +404,7 @@ app.post("/:id/details/payment", async (req, res) => {
     const savedStudent = await student.save();
 
     // Retrieve the coupon name from the cookie
-    const couponName = req.cookies.coupon;
+    const couponName = req.body.Coupon.trim().toLowerCase();
     const discountedPrice = req.cookies.discountedPrice;
 
     // Find and decrement the coupon quantity
