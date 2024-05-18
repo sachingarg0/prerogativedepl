@@ -36,4 +36,11 @@ const CouponSchema = new Schema({
   ],
 });
 
+
+// Pre-save middleware to convert Name to lowercase
+CouponSchema.pre("save", function (next) {
+  this.Name = this.Name.toLowerCase();
+  next();
+});
+
 module.exports = mongoose.model("Coupon", CouponSchema);
