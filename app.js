@@ -323,7 +323,7 @@ app.post("/:id/details", async (req, res) => {
   try {
     const { id } = req.params;
     const Course = await Courses.findById(id);
-    const couponName = req.body.Coupon;
+    const couponName = req.body.Coupon.trim().toLowerCase();
     const checkcoup = await Coupons.findOne({ Name: couponName });
 
     if (couponName) {
